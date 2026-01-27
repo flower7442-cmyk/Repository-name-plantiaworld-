@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 프로필 - PlantiaWorld</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .profile-gradient {
+            background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+        }
+        .tab-active {
+            background-color: #2e8b57;
+            color: white;
+        }
+    </style>
+</head>
+<body class="profile-gradient min-h-screen">
+    <!-- 헤더 (index.html과 동일하게 재사용) -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <!-- 헤더 내용 - index.html과 동일 -->
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- 프로필 헤더 -->
+            <div class="bg-white rounded-2xl p-8 shadow-sm mb-8">
+                <div class="flex items-center">
+                    <!-- 프로필 이미지 -->
+                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mr-6">
+                        <i class="fas fa-user text-green-600 text-3xl"></i>
+                    </div>
+                    
+                    <!-- 사용자 정보 -->
+                    <div class="flex-1">
+                        <h1 class="text-2xl font-bold text-gray-800 mb-2" id="userName">사용자 이름</h1>
+                        <div class="flex items-center space-x-4 mb-3">
+                            <span class="text-gray-600" id="userEmail">
+                                <i class="fas fa-envelope mr-2"></i>이메일
+                            </span>
+                            <span class="text-gray-600" id="userLocation">
+                                <i class="fas fa-map-marker-alt mr-2"></i>지역
+                            </span>
+                        </div>
+                        <div class="flex space-x-4">
+                            <button onclick="editProfile()" class="btn-primary text-white px-4 py-2 rounded-full text-sm">
+                                <i class="fas fa-edit mr-1"></i>프로필 수정
+                            </button>
+                            <button onclick="window.location.href='add-product.html'" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm hover:bg-gray-200">
+                                <i class="fas fa-plus mr-1"></i>새 상품 등록
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 통계 -->
+                <div class="grid grid-cols-3 gap-4 mt-8 pt-8 border-t">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600" id="productCount">0</div>
+                        <div class="text-gray-600">등록한 상품</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600" id="likeCount">0</div>
+                        <div class="text-gray-600">관심 상품</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600" id="soldCount">0</div>
+                        <div class="text-gray-600">판매완료</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 탭 메뉴 -->
+            <div class="flex border-b mb-6">
+                <button id="tab-my-products" class="px-6 py-3 font-medium text-gray-600 hover:text-green-700 border-b-2 border-transparent hover:border-green-500 tab-active" onclick="showTab('my-products')">
+                    내 상품
+                </button>
+                <button id="tab-liked-products" class="px-6 py-3 font-medium text-gray-600 hover:text-green-700 border-b-2 border-transparent hover:border-green-500" onclick="showTab('liked-products')">
+                    관심 상품
+                </button>
+                <button id="tab-sold-products" class="px-6 py-3 font-medium text-gray-600 hover:text-green-700 border-b-2 border-transparent hover:border-green-500" onclick="showTab('sold-products')">
+                    판매내역
+                </button>
+            </div>
+
+            <!-- 탭 내용 -->
+            <div id="tab-content">
+                <!-- 내 상품 탭 -->
+                <div id="my-products-content" class="tab-content">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <!-- 내 상품 목록이 여기에 로드됨 -->
+                    </div>
+                </div>
+
+                <!-- 관심 상품 탭 -->
+                <div id="liked-products-content" class="tab-content hidden">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <!-- 관심 상품 목록이 여기에 로드됨 -->
+                    </div>
+                </div>
+
+                <!-- 판매내역 탭 -->
+                <div id="sold-products-content" class="tab-content hidden">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <!-- 판매완료 상품 목록이 여기에 로드됨 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-gray-900 text-white py-12 mt-12">
+        <!-- 푸터 내용 - index.html과 동일 -->
+    </footer>
+
+    <script>
+        // 페이지 로드 시
+        document.addEventListener('DOMContentLoaded', function() {
+            // 로그인 확인
+            checkLoginStatus();
+            
+            // 사용자 정보 로드
+            loadUserProfile();
+            
+            // 내 상품 로드
+            loadMyProducts();
+        });
+
+        // 로그인 상태 확인
+        function checkLoginStatus() {
+            const user = localStorage.getItem('plantiaUser');
+            if (!user) {
+                alert('로그인이 필요합니다.');
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // 사용자 프로필 로드
+        function loadUserProfile() {
+            const user = JSON.parse(localStorage.getItem('plantiaUser') || '{}');
+            
+            // 사용자 정보 표시
+            document.getElementById('userName').textContent = user.name || '사용자';
+            document.getElementById('userEmail').innerHTML = `<i class="fas fa-envelope mr-2"></i>${user.email || '이메일 없음'}`;
+            document.getElementById('userLocation').innerHTML = `<i class="fas fa-map-marker-alt mr-2"></i>${user.location || '지역 미설정'}`;
+            
+            // 통계 계산
+            calculateStatistics();
+        }
+
+        // 통계 계산
+        function calculateStatistics() {
+            const user = JSON.parse(localStorage.getItem('plantiaUser') || '{}');
+            const products = JSON.parse(localStorage.getItem('plantiaProducts') || '[]');
+            
+            // 내 상품 수
+            const myProducts = products.filter(p => p.seller === user.name);
+            document.getElementById('productCount').textContent = myProducts.length;
+            
+            // 관심 상품 수
+            const likedProducts = JSON.parse(localStorage.getItem('likedProducts') || '[]');
+            document.getElementById('likeCount').textContent = likedProducts.length;
+            
+            // 판매완료 수
+            const soldProducts = myProducts.filter(p => p.status === '판매완료');
+            document.getElementById('soldCount').textContent = soldProducts.length;
+        }
+
+        // 내 상품 로드
+        function loadMyProducts() {
+            const user = JSON.parse(localStorage.getItem('plantiaUser') || '{}');
+            const products = JSON.parse(localStorage.getItem('plantiaProducts') || '[]');
+            
+            const myProducts = products.filter(p => p.seller === user.name);
+            const container = document.querySelector('#my-products-content .grid');
+            
+            if (myProducts.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-leaf text-gray-300 text-4xl mb-4"></i>
+                        <p class="text-gray-500">등록한 상품이 없습니다.</p>
+                        <button onclick="window.location.href='add-product.html'" class="btn-primary text-white px-4 py-2 rounded-full mt-4">
+                            상품 등록하기
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 상품 카드 생성 (index.html의 createProductCard 함수와 유사)
+            container.innerHTML = '';
+            myProducts.forEach(product => {
+                container.innerHTML += createProductCard(product);
+            });
+        }
+
+        // 상품 카드 생성 (index.html과 동일한 함수)
+        function createProductCard(product) {
+            const imageUrl = 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=500';
+            const isFree = product.price === 0;
+            const priceText = isFree ? '무료나눔' : `${Number(product.price).toLocaleString()}원`;
+
+            return `
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm product-card">
+                    <div class="product-image-container">
+                        <img src="${imageUrl}" 
+                             alt="${product.title}" 
+                             class="product-image">
+                        ${product.status === '판매완료' ? `
+                            <div class="sold-out-badge">판매완료</div>
+                        ` : ''}
+                        ${isFree ? `
+                            <div class="sold-out-badge bg-green-600">무료나눔</div>
+                        ` : ''}
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-medium text-gray-800 truncate mb-1">${product.title}</h3>
+                        <div class="flex items-center justify-between">
+                            <span class="price-tag">${priceText}</span>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="editProduct(${product.id})" class="text-gray-400 hover:text-green-600">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteProduct(${product.id})" class="text-gray-400 hover:text-red-600">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="location-tag">${product.sellerLocation || '지역정보'}</span>
+                            <span class="text-xs text-gray-400">${formatDate(product.createdDate)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 날짜 포맷팅 (index.html과 동일)
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diffTime = Math.abs(now - date);
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 0) return '오늘';
+                if (diffDays === 1) return '어제';
+                if (diffDays < 7) return `${diffDays}일전`;
+                if (diffDays < 30) return `${Math.floor(diffDays/7)}주전`;
+                return date.toLocaleDateString('ko-KR');
+            } catch (error) {
+                return '날짜정보';
+            }
+        }
+
+        // 탭 전환
+        function showTab(tabName) {
+            // 탭 버튼 스타일 변경
+            ['my-products', 'liked-products', 'sold-products'].forEach(tab => {
+                const btn = document.getElementById(`tab-${tab}`);
+                const content = document.getElementById(`${tab}-content`);
+                
+                if (btn) {
+                    if (tab === tabName) {
+                        btn.classList.add('tab-active');
+                        btn.classList.remove('text-gray-600');
+                        btn.classList.add('text-green-700', 'border-green-500');
+                    } else {
+                        btn.classList.remove('tab-active', 'text-green-700', 'border-green-500');
+                        btn.classList.add('text-gray-600', 'border-transparent');
+                    }
+                }
+                
+                if (content) {
+                    content.classList.toggle('hidden', tab !== tabName);
+                }
+            });
+            
+            // 탭별 내용 로드
+            switch(tabName) {
+                case 'liked-products':
+                    loadLikedProducts();
+                    break;
+                case 'sold-products':
+                    loadSoldProducts();
+                    break;
+                default:
+                    loadMyProducts();
+            }
+        }
+
+        // 관심 상품 로드
+        function loadLikedProducts() {
+            // 구현 필요
+        }
+
+        // 판매완료 상품 로드
+        function loadSoldProducts() {
+            // 구현 필요
+        }
+
+        // 프로필 수정
+        function editProfile() {
+            alert('프로필 수정 기능은 준비 중입니다.');
+        }
+
+        // 상품 수정
+        function editProduct(productId) {
+            alert(`상품 수정: ${productId}\n(기능은 준비 중입니다.)`);
+        }
+
+        // 상품 삭제
+        function deleteProduct(productId) {
+            if (confirm('정말 삭제하시겠습니까?')) {
+                const products = JSON.parse(localStorage.getItem('plantiaProducts') || '[]');
+                const updatedProducts = products.filter(p => p.id !== productId);
+                localStorage.setItem('plantiaProducts', JSON.stringify(updatedProducts));
+                
+                showMessage('상품이 삭제되었습니다.', 'success');
+                loadMyProducts();
+                calculateStatistics();
+            }
+        }
+
+        // 메시지 표시 (index.html과 동일)
+        function showMessage(message, type) {
+            // index.html의 showMessage 함수와 동일하게 구현
+        }
+    </script>
+</body>
+</html>
