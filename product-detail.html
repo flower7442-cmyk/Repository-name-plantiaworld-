@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 상세 - PlantiaWorld</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Swiper (이미지 슬라이더) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <!-- 카카오맵 API -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=발급받은APPKEY&libraries=services"></script>
+    <style>
+        .plant-gradient {
+            background: linear-gradient(135deg, #f8fdf8 0%, #e8f5e9 100%);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2e8b57 0%, #32cd32 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #228B22 0%, #2e8b57 100%);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #ff6b35 0%, #ffa500 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #e55a2b 0%, #ff8c00 100%);
+        }
+        .swiper-pagination-bullet-active {
+            background-color: #2e8b57 !important;
+        }
+        .tab-active {
+            border-bottom: 3px solid #2e8b57;
+            color: #2e8b57;
+            font-weight: 600;
+        }
+        .message-bubble {
+            max-width: 70%;
+            border-radius: 18px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .message-bubble.sent {
+            background-color: #2e8b57;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .message-bubble.received {
+            background-color: #f0f0f0;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .star-rating {
+            color: #ffc107;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #map {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="plant-gradient min-h-screen pb-24">
+    <!-- 헤더 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <!-- 왼쪽: 뒤로가기 -->
+                <button onclick="goBack()" class="text-gray-700">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </button>
+
+                <!-- 중앙: 페이지 제목 -->
+                <h1 class="text-lg font-bold text-gray-800">상품 상세</h1>
+
+                <!-- 오른쪽: 액션 버튼들 -->
+                <div class="flex items-center space-x-4">
+                    <button id="shareBtn" class="text-gray-700">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                    <button id="reportBtn" class="text-gray-700">
+                        <i class="fas fa-flag"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="container mx-auto px-4">
+        <!-- 이미지 슬라이더 -->
+        <section class="mb-6 rounded-2xl overflow-hidden shadow-lg">
+            <div class="swiper productSwiper">
+                <div class="swiper-wrapper">
+                    <!-- 이미지들이 여기에 동적으로 추가됩니다 -->
+                    <div class="swiper-slide">
+                        <div class="w-full h-64 md:h-96 bg-green-100 flex items-center justify-center">
+                            <i class="fas fa-leaf text-green-300 text-6xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-pagination"></div>
+            </div>
+            
+            <!-- 판매 상태 뱃지 -->
+            <div class="absolute top-4 right-4 z-10">
+                <span id="statusBadge" class="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    판매중
+                </span>
+            </div>
+        </section>
+
+        <!-- 판매자 정보 -->
+        <section class="bg-white rounded-2xl shadow-lg p-6 mb-6 fade-in">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-4">
+                    <!-- 프로필 이미지 -->
+                    <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-green-600 text-2xl"></i>
+                    </div>
+                    
+                    <!-- 판매자 정보 -->
+                    <div>
+                        <h3 id="sellerName" class="font-bold text-gray-800 text-lg">식물애호가</h3>
+                        <div class="flex items-center mt-1">
+                            <div class="star-rating mr-2">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                            <span class="text-gray-600 text-sm">4.0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 판매자 지역 -->
+                <div class="text-right">
+                    <div class="flex items-center text-gray-600">
+                        <i class="fas fa-map-marker-alt mr-2"></i>
+                        <span id="sellerLocation" class="font-medium">서울 강남구</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">거래 선호 지역</p>
+                </div>
+            </div>
+            
+            <!-- 판매자 통계 -->
+            <div class="grid grid-cols-3 gap-4 pt-4 border-t">
+                <div class="text-center">
+                    <p class="text-2xl font-bold text-green-600" id="sellerProductCount">12</p>
+                    <p class="text-xs text-gray-500">등록 상품</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl font-bold text-green-600" id="sellerReviewCount">8</p>
+                    <p class="text-xs text-gray-500">리뷰</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-2xl font-bold text-green-600" id="sellerResponseRate">98%</p>
+                    <p class="text-xs text-gray-500">응답률</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 상품 정보 -->
+        <section class="bg-white rounded-2xl shadow-lg p-6 mb-6 fade-in">
+            <!-- 가격 -->
+            <div class="mb-6">
+                <h2 id="productTitle" class="text-2xl font-bold text-gray-800 mb-2">몬스테라 대형화분</h2>
+                <div class="flex items-center justify-between">
+                    <p id="productPrice" class="text-3xl font-bold text-green-600">25,000원</p>
+                    <div class="flex items-center space-x-2">
+                        <button id="likeBtn" class="text-gray-400 hover:text-red-500">
+                            <i class="far fa-heart text-2xl"></i>
+                        </button>
+                        <span id="likeCount" class="text-gray-500">3</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상품 상세 정보 -->
+            <div class="space-y-4">
+                <div class="flex">
+                    <span class="w-24 text-gray-600">카테고리</span>
+                    <span id="productCategory" class="font-medium">관엽식물</span>
+                </div>
+                <div class="flex">
+                    <span class="w-24 text-gray-600">상태</span>
+                    <span id="productCondition" class="font-medium">거의 새것</span>
+                </div>
+                <div class="flex">
+                    <span class="w-24 text-gray-600">등록일</span>
+                    <span id="productDate" class="font-medium">2023.12.01</span>
+                </div>
+                <div class="flex">
+                    <span class="w-24 text-gray-600">조회수</span>
+                    <span id="productViews" class="font-medium">45회</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 탭 메뉴 -->
+        <div class="bg-white rounded-t-2xl shadow-lg mb-6">
+            <div class="flex border-b">
+                <button id="tabDescription" class="tab-active flex-1 py-4 text-center font-medium" onclick="switchTab('description')">
+                    상품 설명
+                </button>
+                <button id="tabLocation" class="flex-1 py-4 text-center font-medium text-gray-500" onclick="switchTab('location')">
+                    거래 위치
+                </button>
+                <button id="tabChat" class="flex-1 py-4 text-center font-medium text-gray-500" onclick="switchTab('chat')">
+                    채팅
+                </button>
+            </div>
+        </div>
+
+        <!-- 탭 컨텐츠 -->
+        <div id="tabContent" class="fade-in">
+            <!-- 상품 설명 탭 (기본) -->
+            <div id="contentDescription" class="tab-content">
+                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">상품 설명</h3>
+                    <p id="productDescription" class="text-gray-700 leading-relaxed whitespace-pre-line">
+                        상태 좋은 몬스테라 대형화분입니다.
+                        키운 지 6개월 정도 되었고, 건강하게 잘 자라고 있습니다.
+                        직거래 선호하며, 강남역에서 만나실 수 있습니다.
+                        택배도 가능하나 식물 특성상 주의가 필요합니다.
+                    </p>
+                    
+                    <!-- 태그 -->
+                    <div id="productTags" class="flex flex-wrap gap-2 mt-6">
+                        <span class="tag px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">몬스테라</span>
+                        <span class="tag px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">대형화분</span>
+                        <span class="tag px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">실내식물</span>
+                    </div>
+                    
+                    <!-- 거래 방식 -->
+                    <div class="mt-6 p-4 bg-green-50 rounded-xl">
+                        <h4 class="font-bold text-gray-800 mb-2">거래 방식</h4>
+                        <div id="transactionMethods" class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-white border border-green-600 text-green-600 rounded-full text-sm">
+                                <i class="fas fa-handshake mr-1"></i>직거래
+                            </span>
+                            <span class="px-3 py-1 bg-white border border-green-600 text-green-600 rounded-full text-sm">
+                                <i class="fas fa-truck mr-1"></i>택배
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 비슷한 상품 -->
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">비슷한 상품</h3>
+                    <div id="similarProducts" class="grid grid-cols-2 gap-4">
+                        <!-- 비슷한 상품들이 여기에 추가됩니다 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 거래 위치 탭 -->
+            <div id="contentLocation" class="tab-content hidden">
+                <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-map-marker-alt mr-2 text-green-600"></i>거래 위치
+                    </h3>
+                    
+                    <!-- 지도 컨테이너 -->
+                    <div id="map" class="w-full h-64 mb-4"></div>
+                    
+                    <!-- 위치 정보 -->
+                    <div class="p-4 bg-green-50 rounded-xl">
+                        <p class="font-medium text-green-800 mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>거래 가능 지역
+                        </p>
+                        <p id="locationDetails" class="text-gray-700">
+                            서울특별시 강남구 역삼동 일대<br>
+                            강남역 2번 출구에서 만날 수 있습니다.
+                        </p>
+                        <p class="text-sm text-gray-500 mt-2">
+                            ※ 정확한 위치는 채팅으로 협의해주세요.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 채팅 탭 -->
+            <div id="contentChat" class="tab-content hidden">
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-comments mr-2 text-green-600"></i>판매자와 대화하기
+                    </h3>
+                    
+                    <!-- 채팅방 정보 -->
+                    <div class="p-4 bg-green-50 rounded-xl mb-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-medium text-gray-800" id="chatSellerName">식물애호가님과의 대화</p>
+                                <p class="text-sm text-gray-500">평균 응답 시간: 5분 이내</p>
+                            </div>
+                            <button onclick="startNewChat()" class="text-green-600 hover:text-green-800">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 채팅 메시지 영역 -->
+                    <div id="chatMessages" class="h-64 overflow-y-auto mb-4 p-4 border rounded-xl bg-gray-50 flex flex-col">
+                        <!-- 메시지들이 여기에 표시됩니다 -->
+                        <div class="message-bubble received">
+                            안녕하세요! 상품에 관심 있어요.
+                        </div>
+                        <div class="message-bubble sent">
+                            네, 반갑습니다. 궁금하신 점 있으시면 물어보세요!
+                        </div>
+                        <div class="message-bubble received">
+                            오늘 저녁에 직거래 가능하신가요?
+                        </div>
+                    </div>
+                    
+                    <!-- 메시지 입력 -->
+                    <div class="flex space-x-2">
+                        <input type="text" id="chatInput" 
+                               placeholder="메시지를 입력하세요..." 
+                               class="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <button onclick="sendMessage()" class="btn-primary text-white px-4 rounded-lg">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 자주 묻는 질문 -->
+                    <div class="mt-6">
+                        <h4 class="font-bold text-gray-700 mb-3">자주 묻는 질문</h4>
+                        <div class="space-y-2">
+                            <button onclick="quickQuestion('직거래 가능하신가요?')" 
+                                    class="w-full text-left p-3 border rounded-lg hover:bg-green-50 hover:border-green-300">
+                                직거래 가능하신가요?
+                            </button>
+                            <button onclick="quickQuestion('상품 상태가 어떤가요?')" 
+                                    class="w-full text-left p-3 border rounded-lg hover:bg-green-50 hover:border-green-300">
+                                상품 상태가 어떤가요?
+                            </button>
+                            <button onclick="quickQuestion('가격 조정 가능한가요?')" 
+                                    class="w-full text-left p-3 border rounded-lg hover:bg-green-50 hover:border-green-300">
+                                가격 조정 가능한가요?
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 하단 고정 버튼 -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-2xl z-50">
+        <div class="container mx-auto flex space-x-3">
+            <button id="interestBtn" class="btn-secondary text-white font-bold py-3 px-6 rounded-xl flex-1 flex items-center justify-center">
+                <i class="far fa-heart mr-2"></i>
+                <span>관심</span>
+                <span id="interestCount" class="ml-2">3</span>
+            </button>
+            <button onclick="openChat()" class="btn-primary text-white font-bold py-3 px-6 rounded-xl flex-1">
+                <i class="fas fa-comment-dots mr-2"></i>채팅하기
+            </button>
+        </div>
+    </div>
+
+    <!-- 모달 (공유/신고) -->
+    <div id="shareModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">공유하기</h3>
+            <div class="grid grid-cols-4 gap-4 mb-6">
+                <button class="flex flex-col items-center p-3">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2">
+                        <i class="fab fa-facebook-f text-blue-600"></i>
+                    </div>
+                    <span class="text-xs">페이스북</span>
+                </button>
+                <button class="flex flex-col items-center p-3">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-2">
+                        <i class="fab fa-instagram text-red-600"></i>
+                    </div>
+                    <span class="text-xs">인스타그램</span>
+                </button>
+                <button class="flex flex-col items-center p-3">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
+                        <i class="fas fa-link text-green-600"></i>
+                    </div>
+                    <span class="text-xs">링크복사</span>
+                </button>
+                <button class="flex flex-col items-center p-3">
+                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+                        <i class="fas fa-qrcode text-gray-600"></i>
+                    </div>
+                    <span class="text-xs">QR코드</span>
+                </button>
+            </div>
+            <button onclick="closeModal()" class="w-full py-3 border rounded-xl">닫기</button>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let currentProduct = null;
+        let isLiked = false;
+        let chatMessages = [];
+        let map = null;
+
+        // 페이지 로드
+        document.addEventListener('DOMContentLoaded', function() {
+            // URL에서 상품 ID 가져오기
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+            
+            if (!productId) {
+                // ID가 없으면 메인으로
+                window.location.href = '/';
+                return;
+            }
+
+            // 상품 데이터 로드
+            loadProductData(productId);
+            
+            // Swiper 초기화
+            initSwiper();
+            
+            // 이벤트 리스너 설정
+            setupEventListeners();
+            
+            // 지도 초기화 (약간의 지연 후)
+            setTimeout(initMap, 500);
+            
+            // 채팅 데이터 로드
+            loadChatMessages();
+        });
+
+        // 상품 데이터 로드
+        function loadProductData(productId) {
+            const products = JSON.parse(localStorage.getItem('plantiaProducts') || '[]');
+            const product = products.find(p => p.id === productId);
+            
+            if (!product) {
+                alert('상품을 찾을 수 없습니다.');
+                window.location.href = '/';
+                return;
+            }
+
+            currentProduct = product;
+            displayProductData();
+            displaySimilarProducts();
+            
+            // 조회수 증가
+            incrementViewCount(productId);
+        }
+
+        // 상품 데이터 표시
+        function displayProductData() {
+            if (!currentProduct) return;
+
+            // 기본 정보
+            document.getElementById('productTitle').textContent = currentProduct.title;
+            document.getElementById('productPrice').textContent = currentProduct.price.toLocaleString() + '원';
+            document.getElementById('productCategory').textContent = currentProduct.category;
+            document.getElementById('productCondition').textContent = currentProduct.condition || '정보 없음';
+            document.getElementById('productDate').textContent = currentProduct.createdDate || '알 수 없음';
+            document.getElementById('productViews').textContent = (currentProduct.views || 0) + '회';
+            document.getElementById('productDescription').textContent = currentProduct.description;
+            
+            // 판매자 정보
+            document.getElementById('sellerName').textContent = currentProduct.seller || '익명';
+            document.getElementById('sellerLocation').textContent = currentProduct.sellerLocation || '정보 없음';
+            document.getElementById('chatSellerName').textContent = (currentProduct.seller || '익명') + '님과의 대화';
+            
+            // 관심수
+            document.getElementById('likeCount').textContent = currentProduct.likes || 0;
+            document.getElementById('interestCount').textContent = currentProduct.likes || 0;
+            
+            // 거래 방식
+            const transactionContainer = document.getElementById('transactionMethods');
+            transactionContainer.innerHTML = '';
+            
+            if (currentProduct.transaction && currentProduct.transaction.length > 0) {
+                currentProduct.transaction.forEach(method => {
+                    const icon = method === '직거래' ? 'handshake' : 
+                                method === '택배' ? 'truck' : 'gift';
+                    const span = document.createElement('span');
+                    span.className = 'px-3 py-1 bg-white border border-green-600 text-green-600 rounded-full text-sm';
+                    span.innerHTML = `<i class="fas fa-${icon} mr-1"></i>${method}`;
+                    transactionContainer.appendChild(span);
+                });
+            }
+            
+            // 태그
+            const tagContainer = document.getElementById('productTags');
+            tagContainer.innerHTML = '';
+            
+            if (currentProduct.tags && currentProduct.tags.length > 0) {
+                currentProduct.tags.forEach(tag => {
+                    const span = document.createElement('span');
+                    span.className = 'tag px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm';
+                    span.textContent = tag;
+                    tagContainer.appendChild(span);
+                });
+            }
+            
+            // 상태
+            const statusBadge = document.getElementById('statusBadge');
+            if (currentProduct.status === '판매완료') {
+                statusBadge.textContent = '판매완료';
+                statusBadge.className = 'bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-medium';
+            }
+            
+            // 이미지 슬라이더 업데이트
+            updateSwiperImages();
+        }
+
+        // Swiper 초기화
+        function initSwiper() {
+            new Swiper('.productSwiper', {
+                pagination: {
+                    el: '.swiper-pagination',
+                    clickable: true,
+                },
+                loop: true,
+                autoplay: {
+                    delay: 5000,
+                    disableOnInteraction: false,
+                },
+            });
+        }
+
+        // Swiper 이미지 업데이트
+        function updateSwiperImages() {
+            const swiperWrapper = document.querySelector('.swiper-wrapper');
+            swiperWrapper.innerHTML = '';
+            
+            // 실제 이미지 데이터가 없으면 기본 이미지 사용
+            const images = currentProduct?.images || [];
+            
+            if (images.length === 0) {
+                const slide = document.createElement('div');
+                slide.className = 'swiper-slide';
+                slide.innerHTML = `
+                    <div class="w-full h-64 md:h-96 bg-green-100 flex items-center justify-center">
+                        <i class="fas fa-leaf text-green-300 text-6xl"></i>
+                    </div>
+                `;
+                swiperWrapper.appendChild(slide);
+            } else {
+                images.forEach(imgSrc => {
+                    const slide = document.createElement('div');
+                    slide.className = 'swiper-slide';
+                    slide.innerHTML = `
+                        <img src="${imgSrc}" class="w-full h-64 md:h-96 object-cover">
+                    `;
+                    swiperWrapper.appendChild(slide);
+                });
+            }
+            
+            // Swiper 업데이트
+            if (window.swiper) {
+                window.swiper.update();
+            }
+        }
+
+        // 지도 초기화
+        function initMap() {
+            const mapContainer = document.getElementById('map');
+            
+            if (!mapContainer) return;
+            
+            // 기본 위치 (강남역)
+            const defaultPosition = new kakao.maps.LatLng(37.498, 127.027);
+            
+            // 지도 생성
+            const mapOptions = {
+                center: defaultPosition,
+                level: 3
+            };
+            
+            map = new kakao.maps.Map(mapContainer, mapOptions);
+            
+            // 마커 추가
+            const marker = new kakao.maps.Marker({
+                position: defaultPosition
+            });
+            marker.setMap(map);
+            
+            // 인포윈도우
+            const infowindow = new kakao.maps.InfoWindow({
+                content: '<div style="padding:5px;">거래 가능 지역</div>'
+            });
+            infowindow.open(map, marker);
+        }
+
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            // 뒤로가기
+            window.goBack = function() {
+                window.history.back();
+            };
+            
+            // 공유 버튼
+            document.getElementById('shareBtn').addEventListener('click', function() {
+                document.getElementById('shareModal').classList.remove('hidden');
+                document.getElementById('shareModal').classList.add('flex');
+            });
+            
+            // 신고 버튼
+            document.getElementById('reportBtn').addEventListener('click', function() {
+                if (confirm('이 상품을 신고하시겠습니까?')) {
+                    alert('신고가 접수되었습니다.');
+                }
+            });
+            
+            // 관심 버튼
+            document.getElementById('likeBtn').addEventListener('click', toggleLike);
+            document.getElementById('interestBtn').addEventListener('click', toggleLike);
+            
+            // 모달 닫기
+            window.closeModal = function() {
+                document.getElementById('shareModal').classList.add('hidden');
+                document.getElementById('shareModal').classList.remove('flex');
+            };
+            
+            // 링크 복사
+            document.querySelectorAll('#shareModal button')[2].addEventListener('click', function() {
+                navigator.clipboard.writeText(window.location.href)
+                    .then(() => alert('링크가 복사되었습니다!'))
+                    .catch(() => alert('복사에 실패했습니다.'));
+                closeModal();
+            });
+        }
+
+        // 관심 토글
+        function toggleLike() {
+            if (!currentProduct) return;
+            
+            isLiked = !isLiked;
+            
+            // 로컬스토리지 업데이트
+            let likedProducts = JSON.parse(localStorage.getItem('likedProducts') || '[]');
+            
+            if (isLiked) {
+                if (!likedProducts.includes(currentProduct.id)) {
+                    likedProducts.push(currentProduct.id);
+                }
+                // 상품의 관심수 증가
+                currentProduct.likes = (currentProduct.likes || 0) + 1;
+            } else {
+                likedProducts = likedProducts.filter(id => id !== currentProduct.id);
+                // 상품의 관심수 감소
+                currentProduct.likes = Math.max(0, (currentProduct.likes || 1) - 1);
+            }
+            
+            localStorage.setItem('likedProducts', JSON.stringify(likedProducts));
+            
+            // UI 업데이트
+            updateLikeUI();
+            
+            // 전체 상품 목록 업데이트
+            updateProductInStorage();
+        }
+
+        // 관심 UI 업데이트
+        function updateLikeUI() {
+            const likeIcon = document.querySelector('#likeBtn i');
+            const interestIcon = document.querySelector('#interestBtn i');
+            const likeCount = document.getElementById('likeCount');
+            const interestCount = document.getElementById('interestCount');
+            
+            if (isLiked) {
+                likeIcon.className = 'fas fa-heart text-2xl text-red-500';
+                interestIcon.className = 'fas fa-heart mr-2';
+                document.getElementById('interestBtn').innerHTML = `
+                    <i class="fas fa-heart mr-2"></i>
+                    <span>관심해제</span>
+                    <span id="interestCount" class="ml-2">${currentProduct.likes || 0}</span>
+                `;
+            } else {
+                likeIcon.className = 'far fa-heart text-2xl';
+                interestIcon.className = 'far fa-heart mr-2';
+                document.getElementById('interestBtn').innerHTML = `
+                    <i class="far fa-heart mr-2"></i>
+                    <span>관심</span>
+                    <span id="interestCount" class="ml-2">${currentProduct.likes || 0}</span>
+                `;
+            }
+            
+            likeCount.textContent = currentProduct.likes || 0;
+            interestCount.textContent = currentProduct.likes || 0;
+        }
+
+        // 상품 저장소 업데이트
+        function updateProductInStorage() {
+            const products = JSON.parse(localStorage.getItem('plantiaProducts') || '[]');
+            const index = products.findIndex(p => p.id === currentProduct.id);
+            
+            if (index !== -1) {
+                products[index] = currentProduct;
+                localStorage.setItem('plantiaProducts', JSON.stringify(products));
+            }
+        }
+
+        // 조회수 증가
+        function incrementViewCount(productId) {
+            const products = JSON.parse(localStorage.getItem('plantiaProducts') || '[]');
+            const index = products.findIndex(p => p.id === productId);
+            
+            if (index !== -1) {
+                products[index].views = (products[index].views || 0) + 1;
+                localStorage.setItem('plantiaProducts', JSON.stringify(products));
+                currentProduct.views = products[index].views;
+                document.getElementById('productViews').textContent = currentProduct.views + '회';
+            }
+        }
+
+        // 탭 전환
+        function switchTab(tabName) {
+            // 탭 버튼 업데이트
+            document.querySelectorAll('.flex button').forEach(btn => {
+                btn.classList.remove('tab-active');
+                btn.classList.add('text-gray-500');
+            });
+            
+            document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1))
+                .classList.add('tab-active', 'text-green-600');
+            
+            // 탭 컨텐츠 업데이트
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            document.getElementById('content' + tabName.charAt(0).toUpperCase() + tabName.slice(1))
+                .classList.remove('hidden');
+            
+            // 채팅 탭일 때 메시지 영역 스크롤 아래로
+            if (tabName === 'chat') {
+                setTimeout(() => {
+                    const chatMessages = document.getElementById('chatMessages');
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 100);
+            }
+            
+            // 위치 탭일 때 지도 리사이즈
+            if (tabName === 'location' && map) {
+                setTimeout(() => {
+                    map.relayout();
+                }, 300);
+            }
+        }
+
+        // 채팅 메시지 로드
+        function loadChatMessages() {
+            // 임시 메시지 데이터
+            chatMessages = [
+                { sender: 'buyer', text: '안녕하세요! 상품에 관심 있어요.', time: '오전 10:30' },
+                { sender: 'seller', text: '네, 반갑습니다. 궁금하신 점 있으시면 물어보세요!', time: '오전 10:31' },
+                { sender: 'buyer', text: '오늘 저녁에 직거래 가능하신가요?', time: '오전 10:32' }
+            ];
+            
+            updateChatDisplay();
+        }
+
+        // 채팅 화면 업데이트
+        function updateChatDisplay() {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+            
+            chatMessages.forEach(msg => {
+                const bubble = document.createElement('div');
+                bubble.className = `message-bubble ${msg.sender === 'seller' ? 'sent' : 'received'}`;
+                bubble.innerHTML = `
+                    <div>${msg.text}</div>
+                    <div class="text-xs opacity-75 mt-1">${msg.time}</div>
+                `;
+                container.appendChild(bubble);
+            });
+            
+            // 스크롤 아래로
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 메시지 전송
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // 새 메시지 추가
+            const now = new Date();
+            const time = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            chatMessages.push({
+                sender: 'buyer',
+                text: message,
+                time: time
+            });
+            
+            // 입력창 초기화
+            input.value = '';
+            
+            // 화면 업데이트
+            updateChatDisplay();
+            
+            // 판매자 응답 (시뮬레이션)
+            setTimeout(() => {
+                const responses = [
+                    '네, 가능합니다!',
+                    '어떤 시간이 편하신가요?',
+                    '직거래는 강남역에서 가능해요.',
+                    '상품 상태는 사진과 동일합니다.',
+                    '가격은 조금 더 협의 가능합니다.'
+                ];
+                
+                const response = responses[Math.floor(Math.random() * responses.length)];
+                
+                chatMessages.push
