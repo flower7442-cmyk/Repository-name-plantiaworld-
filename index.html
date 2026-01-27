@@ -550,26 +550,158 @@
             }
         }
 
-        // 로그인 상태 확인
-        function checkLoginStatus() {
-            const user = localStorage.getItem('plantiaUser');
-            const loginBtn = document.getElementById('loginBtn');
+        // 로그인 상태 확인 및 UI 업데이트
+function checkLoginStatus() {
+    const user = localStorage.getItem('plantiaUser');
+    const authButtonsContainer = document.getElementById('authButtons');
+    
+    if (!authButtonsContainer) {
+        // 컨테이너가 없으면 생성
+        const headerActions = document.querySelector('.flex.items-center.space-x-3');
+        if (headerActions) {
+            const oldBtn = document.querySelector('a[href="/login.html"]');
+            if (oldBtn) oldBtn.remove();
             
-            if (user && loginBtn) {
-                const userData = JSON.parse(user);
-                loginBtn.innerHTML = `
-                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-user text-green-600"></i>
-                    </div>
-                    <span class="ml-2 hidden md:inline">${userData.name}</span>
-                `;
-                loginBtn.href = '/profile.html';
-                loginBtn.onclick = null;
-                
-                // 헤더에 사용자 지역 표시
-                const locationDisplay = document.getElementById('userLocationDisplay');
-                if (locationDisplay && userData.location) {
-                    locationDisplay.textContent = userData.location;
+            authButtonsContainer = document.createElement('div');
+            authButtonsContainer.id = 'authButtons';
+            authButtonsContainer.className = 'flex items-center';
+            headerActions.appendChild(authButtonsContainer);
+        }
+    }
+    
+    if (user) {
+        const userData = JSON.parse(user);
+        updateUIForLoggedInUser(userData);
+    } else {
+        updateUIForLoggedOutUser();
+    }
+}
+
+// 로그인 상태일 때 UI
+function updateUIForLoggedInUser(userData) {
+    const authButtonsContainer = document.getElementById('authButtons');
+    if (!authButtonsContainer) return;
+    
+    authButtonsContainer.innerHTML = `
+        <div class="relative group">
+            <button class="flex items-center text-gray-700 hover:text-green-700 focus:outline-none">
+                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-2">
+                    <i class="fas fa-user text-green-600"></i>
+                </div>
+                <span class="hidden md:inline">${userData.name}</span>
+                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+            </button>
+            
+            <!-- 드롭다운 메뉴 -->
+            <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 z-50 hidden group-hover:block hover:block">
+                <a href="/profile.html" class="block px-4 py-3 text-gray-700 hover:bg-green-50">
+                    <i class="fas fa-user-circle mr-3"></i>내 프로필
+                </a>
+                <a href="javascript:void(0)" onclick="showMyProducts()" class="block px-4 py-3 text-gray-700 hover:bg-green-50">
+                    <i class="fas fa-leaf mr-3"></i>내 상품
+                </a>
+                <a href="javascript:void(0)" onclick="showFavorites()" class="block px-4 py-3 text-gray-700 hover:bg-green-50">
+                    <i class="fas fa-heart mr-3"></i>관심 목록
+                </a>
+                <div class="border-t my-2"></div>
+                <a href="javascript:void(0)" onclick="logout()" class="block px-4 py-3 text-red-600 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt mr-3"></i>로그아웃
+                </a>
+            </div>
+        </div>
+    `;
+    
+    // 헤더에 사용자 지역 표시
+    const locationDisplay = document.getElementById('userLocationDisplay');
+    if (locationDisplay && userData.location) {
+        locationDisplay.textContent = userData.location;
+    }
+    
+    // 지역별 상품 섹션 표시
+    const localSection = document.getElementById('localProductsSection');
+    if (localSection) {
+        localSection.classList.remove('hidden');
+    }
+}
+
+// 비로그인 상태일 때 UI
+function updateUIForLoggedOutUser() {
+    const authButtonsContainer = document.getElementById('authButtons');
+    if (!authButtonsContainer) return;
+    
+    authButtonsContainer.innerHTML = `
+        <a href="/login.html" class="flex items-center text-gray-700 hover:text-green-700">
+            <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                <i class="fas fa-user text-gray-600"></i>
+            </div>
+            <span class="ml-2 hidden md:inline">로그인</span>
+        </a>
+    `;
+    
+    // 헤더에 기본 지역 표시
+    const locationDisplay = document.getElementById('userLocationDisplay');
+    if (locationDisplay) {
+        locationDisplay.textContent = '전국';
+    }
+    
+    // 지역별 상품 섹션 숨기기
+    const localSection = document.getElementById('localProductsSection');
+    if (localSection) {
+        localSection.classList.add('hidden');
+    }
+}
+
+// 로그아웃 함수
+function logout() {
+    if (confirm('정말 로그아웃 하시겠습니까?')) {
+        // 로컬스토리지에서 사용자 정보 삭제
+        localStorage.removeItem('plantiaUser');
+        
+        // 관심목록은 유지 (선택사항)
+        // localStorage.removeItem('likedProducts');
+        
+        // UI 업데이트
+        updateUIForLoggedOutUser();
+        
+        // 상품 목록 새로고침
+        loadProducts();
+        
+        // 메시지 표시
+        showMessage('로그아웃 되었습니다.', 'success');
+        
+        // 1초 후 메인 페이지로 리디렉트
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
+    }
+}
+
+// 내 상품 보기
+function showMyProducts() {
+    const user = JSON.parse(localStorage.getItem('plantiaUser') || '{}');
+    const myProducts = allProducts.filter(product => 
+        product.seller === user.name || product.sellerEmail === user.email
+    );
+    
+    if (myProducts.length > 0) {
+        // 내 상품만 필터링하여 표시
+        currentFilter = 'my';
+        const sectionTitle = document.getElementById('sectionTitle');
+        if (sectionTitle) {
+            sectionTitle.textContent = '내 상품';
+        }
+        
+        const container = document.getElementById('productGrid');
+        if (container) {
+            container.innerHTML = '';
+            myProducts.forEach(product => {
+                container.innerHTML += createProductCard(product);
+            });
+        }
+    } else {
+        alert('등록한 상품이 없습니다.');
+    }
+}
                 }
             }
         }
