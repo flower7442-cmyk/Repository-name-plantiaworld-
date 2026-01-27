@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - PlantiaWorld</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .plant-gradient {
+            background: linear-gradient(135deg, #f0f9f0 0%, #e8f5e9 100%);
+        }
+        .input-focus:focus {
+            box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.2);
+            border-color: #2e8b57;
+        }
+        .checkbox-custom:checked {
+            background-color: #2e8b57;
+            border-color: #2e8b57;
+        }
+        .btn-register {
+            background: linear-gradient(135deg, #2e8b57 0%, #32cd32 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-register:hover {
+            background: linear-gradient(135deg, #228B22 0%, #2e8b57 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(46, 139, 87, 0.3);
+        }
+    </style>
+</head>
+<body class="plant-gradient min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-2xl w-full">
+        <!-- 헤더 -->
+        <div class="bg-green-600 text-white p-6 text-center">
+            <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-leaf text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold">PlantiaWorld 회원가입</h1>
+            <p class="text-green-100 mt-2">이웃과 식물을 나누는 따뜻한 공간에 오신 것을 환영합니다</p>
+        </div>
+
+        <!-- 회원가입 폼 -->
+        <div class="p-8">
+            <form id="registerForm" class="space-y-6">
+                <!-- 기본 정보 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 이름 -->
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-user mr-2 text-green-600"></i>이름 *
+                        </label>
+                        <input type="text" id="name" 
+                               class="w-full p-4 border border-gray-300 rounded-xl input-focus outline-none transition"
+                               placeholder="홍길동" required>
+                    </div>
+
+                    <!-- 이메일 -->
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-envelope mr-2 text-green-600"></i>이메일 *
+                        </label>
+                        <input type="email" id="email" 
+                               class="w-full p-4 border border-gray-300 rounded-xl input-focus outline-none transition"
+                               placeholder="plant@world.com" required>
+                        <p class="text-xs text-gray-500 mt-1">로그인 시 사용할 이메일입니다</p>
+                    </div>
+                </div>
+
+                <!-- 비밀번호 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-lock mr-2 text-green-600"></i>비밀번호 *
+                        </label>
+                        <input type="password" id="password" 
+                               class="w-full p-4 border border-gray-300 rounded-xl input-focus outline-none transition"
+                               placeholder="••••••••" required minlength="6">
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">
+                            <i class="fas fa-lock mr-2 text-green-600"></i>비밀번호 확인 *
+                        </label>
+                        <input type="password" id="confirmPassword" 
+                               class="w-full p-4 border border-gray-300 rounded-xl input-focus outline-none transition"
+                               placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <!-- 지역 정보 -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">
+                        <i class="fas fa-map-marker-alt mr-2 text-green-600"></i>지역 *
+                    </label>
+                    <select id="location" 
+                            class="w-full p-4 border border-gray-300 rounded-xl input-focus outline-none transition bg-white" required>
+                        <option value="">지역을 선택하세요</option>
+                        <option value="서울">서울특별시</option>
+                        <option value="경기">경기도</option>
+                        <option value="인천">인천광역시</option>
+                        <option value="부산">부산광역시</option>
+                        <option value="대구">대구광역시</option>
+                        <option value="대전">대전광역시</option>
+                        <option value="광주">광주광역시</option>
+                        <option value="울산">울산광역시</option>
+                        <option value="세종">세종특별자치시</option>
+                        <option value="강원">강원도</option>
+                        <option value="충북">충청북도</option>
+                        <option value="충남">충청남도</option>
+                        <option value="전북">전라북도</option>
+                        <option value="전남">전라남도</option>
+                        <option value="경북">경상북도</option>
+                        <option value="경남">경상남도</option>
+                        <option value="제주">제주특별자치도</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">거래 시 지역 정보가 표시됩니다</p>
+                </div>
+
+                <!-- 관심 카테고리 -->
+                <div>
+                    <label class="block text-gray-700 font-medium mb-4">
+                        <i class="fas fa-heart mr-2 text-green-600"></i>관심 카테고리 (다중 선택 가능)
+                    </label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
+                            <input type="checkbox" name="interest" value="관엽식물" class="mr-3 w-5 h-5 checkbox-custom">
+                            <span class="flex items-center">
+                                <i class="fas fa-seedling mr-2 text-green-600"></i>관엽식물
+                            </span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
+                            <input type="checkbox" name="interest" value="다육이" class="mr-3 w-5 h-5 checkbox-custom">
+                            <span class="flex items-center">
+                                <i class="fas fa-spa mr-2 text-green-600"></i>다육이
+                            </span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
+                            <input type="checkbox" name="interest" value="화분/흙" class="mr-3 w-5 h-5 checkbox-custom">
+                            <span class="flex items-center">
+                                <i class="fas fa-tint mr-2 text-green-600"></i>화분/흙
+                            </span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
+                            <input type="checkbox" name="interest" value="영양제" class="mr-3 w-5 h-5 checkbox-custom">
+                            <span class="flex items-center">
+                                <i class="fas fa-flask mr-2 text-green-600"></i>영양제
+                            </span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
+                            <input type="checkbox" name="interest" value="씨앗" class="mr-3 w-5 h-5 checkbox-custom">
+                            <span class="flex items-center">
+                                <i class="fas fa-seedling mr-2 text-green-600"></i>씨앗
+                            </span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
+                            <input type="checkbox" name="interest" value="도구" class="mr-3 w-5 h-5 checkbox-custom">
+                            <span class="flex items-center">
+                                <i class="fas fa-tools mr-2 text-green-600"></i>도구
+                            </span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
+                            <input type="checkbox" name="interest" value="식물책" class="mr-3 w-5 h-5 checkbox-custom">
+                            <span class="flex items-center">
+                                <i class="fas fa-book mr-2 text-green-600"></i>식물책
+                            </span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
+                            <input type="checkbox" name="interest" value="나눔" class="mr-3 w-5 h-5 checkbox-custom">
+                            <span class="flex items-center">
+                                <i class="fas fa-gift mr-2 text-green-600"></i>나눔
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 약관 동의 -->
+                <div class="border-t pt-6">
+                    <div class="space-y-3">
+                        <label class="flex items-start">
+                            <input type="checkbox" id="terms" class="mr-3 mt-1 w-5 h-5 checkbox-custom" required>
+                            <span class="text-gray-700">
+                                <span class="font-medium">이용약관</span>에 동의합니다
+                                <a href="#" class="text-green-600 hover:text-green-800 ml-2">보기</a>
+                            </span>
+                        </label>
+                        <label class="flex items-start">
+                            <input type="checkbox" id="privacy" class="mr-3 mt-1 w-5 h-5 checkbox-custom" required>
+                            <span class="text-gray-700">
+                                <span class="font-medium">개인정보 수집 및 이용</span>에 동의합니다
+                                <a href="#" class="text-green-600 hover:text-green-800 ml-2">보기</a>
+                            </span>
+                        </label>
+                        <label class="flex items-start">
+                            <input type="checkbox" id="marketing" class="mr-3 mt-1 w-5 h-5 checkbox-custom">
+                            <span class="text-gray-700">
+                                <span class="font-medium">마케팅 정보 수신</span>에 동의합니다 (선택)
+                                <span class="text-gray-500 text-sm ml-2">새로운 식물, 할인 정보 등</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 버튼 -->
+                <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                    <button type="submit" 
+                            class="btn-register text-white font-bold py-4 px-8 rounded-xl text-lg flex-1">
+                        <i class="fas fa-user-plus mr-2"></i>회원가입 완료
+                    </button>
+                    <a href="/login.html" 
+                       class="border-2 border-green-600 text-green-600 hover:bg-green-50 font-bold py-4 px-8 rounded-xl text-lg text-center flex-1">
+                        <i class="fas fa-sign-in-alt mr-2"></i>로그인으로 이동
+                    </a>
+                </div>
+            </form>
+
+            <!-- 소셜 회원가입 -->
+            <div class="mt-8 pt-6 border-t">
+                <p class="text-gray-600 text-center mb-4">소셜 계정으로 간편 가입</p>
+                <div class="flex justify-center space-x-6">
+                    <button class="social-btn bg-blue-100 hover:bg-blue-200">
+                        <i class="fab fa-facebook-f text-blue-600 text-xl"></i>
+                        <span class="text-sm mt-1">Facebook</span>
+                    </button>
+                    <button class="social-btn bg-red-100 hover:bg-red-200">
+                        <i class="fab fa-google text-red-600 text-xl"></i>
+                        <span class="text-sm mt-1">Google</span>
+                    </button>
+                    <button class="social-btn bg-gray-100 hover:bg-gray-200">
+                        <i class="fab fa-github text-gray-800 text-xl"></i>
+                        <span class="text-sm mt-1">GitHub</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 홈으로 -->
+            <div class="text-center mt-6">
+                <a href="/" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-home mr-2"></i>홈으로 돌아가기
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 회원가입 폼 처리
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 입력값 가져오기
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const location = document.getElementById('location').value;
+            const terms = document.getElementById('terms').checked;
+            const privacy = document.getElementById('privacy').checked;
+            
+            // 유효성 검사
+            if (!name || !email || !password || !confirmPassword || !location) {
+                showMessage('모든 필수 항목을 입력해주세요.', 'error');
+                return;
+            }
+            
+            if (!validateEmail(email)) {
+                showMessage('유효한 이메일 주소를 입력해주세요.', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('비밀번호는 6자 이상이어야 합니다.', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showMessage('비밀번호가 일치하지 않습니다.', 'error');
+                return;
+            }
+            
+            if (!terms || !privacy) {
+                showMessage('필수 약관에 동의해주세요.', 'error');
+                return;
+            }
+            
+            // 관심사 수집
+            const interests = [];
+            document.querySelectorAll('input[name="interest"]:checked').forEach(cb => {
+                interests.push(cb.value);
+            });
+            
+            // 임시 사용자 데이터 생성 (실제로는 Firebase/AJAX 요청)
+            const userData = {
+                name: name,
+                email: email,
+                location: location,
+                interests: interests,
+                joinDate: new Date().toLocaleDateString(),
+                marketingAgree: document.getElementById('marketing').checked
+            };
+            
+            // 로컬스토리지에 저장 (임시)
+            localStorage.setItem('plantiaUser', JSON.stringify(userData));
+            
+            // 성공 메시지
+            showMessage(`${name}님, 회원가입을 축하합니다!`, 'success');
+            
+            // 2초 후 로그인 페이지로 이동
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 2000);
+        });
+        
+        // 소셜 회원가입 버튼
+        document.querySelectorAll('.social-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const platform = this.querySelector('i').className.includes('facebook') ? 'Facebook' :
+                               this.querySelector('i').className.includes('google') ? 'Google' : 'GitHub';
+                showMessage(`${platform} 회원가입은 준비 중입니다.`, 'info');
+            });
+        });
+        
+        // 유틸리티 함수들
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        function showMessage(message, type) {
+            // 기존 메시지 제거
+            const existingMsg = document.getElementById('messageBox');
+            if (existingMsg) existingMsg.remove();
+            
+            // 새 메시지 생성
+            const messageBox = document.createElement('div');
+            messageBox.id = 'messageBox';
+            
+            const colors = {
+                success: 'bg-green-100 border-green-500 text-green-700',
+                error: 'bg-red-100 border-red-500 text-red-700',
+                info: 'bg-blue-100 border-blue-500 text-blue-700'
+            };
+            
+            messageBox.className = `fixed top-4 left-1/2 transform -translate-x-1/2 p-4 rounded-xl border-2 shadow-lg z-50 ${colors[type]}`;
+            messageBox.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-3 text-lg"></i>
+                    <span class="font-medium">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(messageBox);
+            
+            // 5초 후 자동 제거
+            setTimeout(() => {
+                if (messageBox.parentElement) {
+                    messageBox.remove();
+                }
+            }, 5000);
+        }
+        
+        // CSS 스타일 추가
+        const style = document.createElement('style');
+        style.textContent = `
+            .social-btn {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 12px;
+                border-radius: 12px;
+                transition: all 0.3s ease;
+                min-width: 80px;
+            }
+            input[type="checkbox"] {
+                accent-color: #2e8b57;
+            }
+            select option:checked {
+                background-color: #e8f5e9;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
