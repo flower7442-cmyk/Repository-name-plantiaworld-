@@ -19,7 +19,6 @@
         .btn-primary:hover {
             background: linear-gradient(135deg, #228B22 0%, #2e8b57 100%);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(34, 139, 34, 0.3);
         }
         .category-card {
             transition: all 0.3s ease;
@@ -32,7 +31,6 @@
         }
         .product-card {
             transition: all 0.2s ease;
-            height: 100%;
         }
         .product-card:hover {
             transform: translateY(-4px);
@@ -60,79 +58,16 @@
         .empty-state {
             background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
         }
-        .user-menu-dropdown {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 100%;
-            min-width: 200px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            margin-top: 10px;
-        }
-        .user-menu:hover .user-menu-dropdown {
-            display: block;
-        }
-        .product-image-container {
-            position: relative;
-            padding-bottom: 100%; /* 1:1 비율 */
-            overflow: hidden;
-        }
-        .product-image {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .sold-out-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .price-tag {
-            color: #1e40af;
-            font-weight: bold;
-        }
-        .location-tag {
-            font-size: 12px;
-            color: #666;
-        }
-        @media (max-width: 768px) {
-            .product-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-        }
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .product-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        @media (min-width: 1025px) {
-            .product-grid {
-                grid-template-columns: repeat(6, 1fr);
-            }
-        }
     </style>
 </head>
 <body class="plant-gradient min-h-screen">
-    <!-- 헤더 -->
+    <!-- 헤더 (당근마켓 스타일) -->
     <header class="bg-white shadow-sm sticky top-0 z-50 fade-in">
         <div class="container mx-auto px-4 py-3">
             <div class="flex items-center justify-between">
                 <!-- 왼쪽: 로고 + 지역 -->
                 <div class="flex items-center space-x-4">
-                    <a href="/" class="flex items-center space-x-2 no-underline">
+                    <a href="/" class="flex items-center space-x-2">
                         <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
                             <i class="fas fa-leaf text-white"></i>
                         </div>
@@ -142,7 +77,7 @@
                         </div>
                     </a>
                     
-                    <div class="hidden md:flex items-center text-gray-700 border-l pl-4 cursor-pointer" onclick="showLocationModal()">
+                    <div class="hidden md:flex items-center text-gray-700 border-l pl-4">
                         <i class="fas fa-map-marker-alt text-green-600 mr-2"></i>
                         <span id="userLocationDisplay" class="font-medium">전국</span>
                         <i class="fas fa-chevron-down ml-1 text-sm"></i>
@@ -163,20 +98,22 @@
 
                 <!-- 오른쪽: 액션 버튼 -->
                 <div class="flex items-center space-x-3">
-                    <button class="hidden md:flex items-center text-gray-600 hover:text-green-700 transition-colors" onclick="showFavorites()">
+                    <button class="hidden md:flex items-center text-gray-600 hover:text-green-700" onclick="showFavorites()">
                         <i class="far fa-heart mr-1"></i>
                         <span class="text-sm">관심</span>
                     </button>
-                    <button class="hidden md:flex items-center text-gray-600 hover:text-green-700 transition-colors" onclick="showNotifications()">
+                    <button class="hidden md:flex items-center text-gray-600 hover:text-green-700" onclick="showNotifications()">
                         <i class="far fa-bell"></i>
-                        <span id="notificationCount" class="hidden"></span>
                     </button>
-                    <a href="/add-product.html" class="btn-primary text-white px-4 py-2 rounded-full text-sm font-medium no-underline transition-all">
+                    <a href="/add-product.html" class="btn-primary text-white px-4 py-2 rounded-full text-sm font-medium">
                         <i class="fas fa-plus mr-1"></i>글쓰기
                     </a>
-                    <div id="authButtons" class="flex items-center">
-                        <!-- 로그인/사용자 메뉴가 여기에 동적으로 로드됩니다 -->
-                    </div>
+                    <a href="/login.html" id="loginBtn" class="flex items-center text-gray-700 hover:text-green-700">
+                        <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-gray-600"></i>
+                        </div>
+                        <span class="ml-2 hidden md:inline">로그인</span>
+                    </a>
                 </div>
             </div>
 
@@ -198,22 +135,22 @@
     <div class="container mx-auto px-4 py-3 fade-in">
         <div class="overflow-x-auto">
             <div class="flex space-x-2 pb-2">
-                <button class="flex-shrink-0 btn-primary text-white px-4 py-2 rounded-full text-sm font-medium transition-all" onclick="filterProducts('all')">
+                <button class="flex-shrink-0 btn-primary text-white px-4 py-2 rounded-full text-sm font-medium" onclick="filterProducts('all')">
                     전체
                 </button>
-                <button class="flex-shrink-0 bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-medium border hover:border-green-500 hover:text-green-700 transition-all" onclick="filterProducts('관엽식물')">
+                <button class="flex-shrink-0 bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-medium border hover:border-green-500" onclick="filterProducts('관엽식물')">
                     <i class="fas fa-seedling mr-2"></i>관엽식물
                 </button>
-                <button class="flex-shrink-0 bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-medium border hover:border-green-500 hover:text-green-700 transition-all" onclick="filterProducts('다육이')">
+                <button class="flex-shrink-0 bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-medium border hover:border-green-500" onclick="filterProducts('다육이')">
                     <i class="fas fa-spa mr-2"></i>다육이
                 </button>
-                <button class="flex-shrink-0 bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-medium border hover:border-green-500 hover:text-green-700 transition-all" onclick="filterProducts('화분/흙')">
+                <button class="flex-shrink-0 bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-medium border hover:border-green-500" onclick="filterProducts('화분/흙')">
                     <i class="fas fa-tint mr-2"></i>화분/흙
                 </button>
-                <button class="flex-shrink-0 bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-medium border hover:border-green-500 hover:text-green-700 transition-all" onclick="filterProducts('정보공유')">
+                <button class="flex-shrink-0 bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-medium border hover:border-green-500" onclick="filterProducts('정보공유')">
                     <i class="fas fa-book mr-2"></i>정보공유
                 </button>
-                <button class="flex-shrink-0 bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-medium border hover:border-green-500 hover:text-green-700 transition-all" onclick="filterProducts('나눔')">
+                <button class="flex-shrink-0 bg-white text-gray-700 px-4 py-2 rounded-full text-sm font-medium border hover:border-green-500" onclick="filterProducts('나눔')">
                     <i class="fas fa-gift mr-2"></i>나눔
                 </button>
             </div>
@@ -221,25 +158,25 @@
     </div>
 
     <!-- 메인 컨텐츠 -->
-    <main class="container mx-auto px-4 py-6 pb-20 md:pb-6">
+    <main class="container mx-auto px-4 py-6">
         <!-- 인기 상품 섹션 -->
         <section class="mb-10 fade-in">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800" id="sectionTitle">인기 식물</h2>
                 <div class="flex space-x-4">
-                    <button id="sortPriceBtn" class="text-gray-600 hover:text-green-800 font-medium transition-colors" onclick="sortProducts('price')">
+                    <button id="sortPriceBtn" class="text-gray-600 hover:text-green-800 font-medium" onclick="sortProducts('price')">
                         가격순
                     </button>
-                    <button id="sortRecentBtn" class="text-green-600 hover:text-green-800 font-medium transition-colors" onclick="sortProducts('recent')">
+                    <button id="sortRecentBtn" class="text-green-600 hover:text-green-800 font-medium" onclick="sortProducts('recent')">
                         최신순
                     </button>
                 </div>
             </div>
             
             <!-- 상품 그리드 -->
-            <div id="productGrid" class="product-grid gap-4">
+            <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <!-- 상품들이 여기에 동적으로 추가됩니다 -->
-                <div class="col-span-full flex justify-center py-12">
+                <div class="col-span-2 md:col-span-3 lg:col-span-6 flex justify-center py-12">
                     <div class="loading-spinner"></div>
                 </div>
             </div>
@@ -249,37 +186,37 @@
         <section class="mb-10 fade-in">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">카테고리별 둘러보기</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button class="category-card bg-white rounded-2xl p-6 text-center cursor-pointer border-none w-full" onclick="filterProducts('관엽식물')">
+                <a href="javascript:void(0)" class="category-card bg-white rounded-2xl p-6 text-center" onclick="filterProducts('관엽식물')">
                     <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-seedling text-green-600 text-2xl"></i>
                     </div>
                     <h3 class="font-bold text-gray-800 mb-2">관엽식물</h3>
                     <p class="text-gray-600 text-sm">몬스테라, 스킨답서스 등</p>
-                </button>
+                </a>
 
-                <button class="category-card bg-white rounded-2xl p-6 text-center cursor-pointer border-none w-full" onclick="filterProducts('다육이')">
+                <a href="javascript:void(0)" class="category-card bg-white rounded-2xl p-6 text-center" onclick="filterProducts('다육이')">
                     <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-spa text-green-600 text-2xl"></i>
                     </div>
                     <h3 class="font-bold text-gray-800 mb-2">다육식물</h3>
                     <p class="text-gray-600 text-sm">선인장, 다육이 등</p>
-                </button>
+                </a>
 
-                <button class="category-card bg-white rounded-2xl p-6 text-center cursor-pointer border-none w-full" onclick="filterProducts('화분/흙')">
+                <a href="javascript:void(0)" class="category-card bg-white rounded-2xl p-6 text-center" onclick="filterProducts('화분/흙')">
                     <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-tint text-green-600 text-2xl"></i>
                     </div>
                     <h3 class="font-bold text-gray-800 mb-2">화분/용품</h3>
                     <p class="text-gray-600 text-sm">화분, 비료, 도구</p>
-                </button>
+                </a>
 
-                <button class="category-card bg-white rounded-2xl p-6 text-center cursor-pointer border-none w-full" onclick="filterProducts('정보공유')">
+                <a href="javascript:void(0)" class="category-card bg-white rounded-2xl p-6 text-center" onclick="filterProducts('정보공유')">
                     <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-book text-green-600 text-2xl"></i>
                     </div>
                     <h3 class="font-bold text-gray-800 mb-2">정보공유</h3>
                     <p class="text-gray-600 text-sm">키우는 방법, 노하우</p>
-                </button>
+                </a>
             </div>
         </section>
 
@@ -318,49 +255,49 @@
         </section>
 
         <!-- 지역별 상품 (로그인 시 표시) -->
-        <section id="localProductsSection" class="mb-10 fade-in">
+        <section id="localProductsSection" class="mb-10 hidden fade-in">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">
                     <i class="fas fa-map-marker-alt text-green-600 mr-2"></i>
                     <span id="localSectionTitle">내 지역 인기 상품</span>
                 </h2>
-                <button class="text-green-600 hover:text-green-800 font-medium transition-colors" onclick="refreshLocalProducts()">
+                <button class="text-green-600 hover:text-green-800 font-medium" onclick="refreshLocalProducts()">
                     <i class="fas fa-sync-alt mr-1"></i>새로고침
                 </button>
             </div>
-            <div id="localProductGrid" class="product-grid gap-4">
+            <div id="localProductGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <!-- 지역별 상품들이 여기에 추가됩니다 -->
             </div>
         </section>
     </main>
 
     <!-- 하단 네비게이션 (모바일) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-3 z-50 shadow-lg">
-        <a href="/" class="flex flex-col items-center text-green-600 no-underline">
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-3 z-50">
+        <a href="/" class="flex flex-col items-center text-green-600">
             <i class="fas fa-home text-xl"></i>
             <span class="text-xs mt-1">홈</span>
         </a>
-        <button class="flex flex-col items-center text-gray-500 border-none bg-transparent" onclick="showSearchModal()">
+        <a href="javascript:void(0)" class="flex flex-col items-center text-gray-500" onclick="showSearchModal()">
             <i class="fas fa-search text-xl"></i>
             <span class="text-xs mt-1">검색</span>
-        </button>
-        <a href="/add-product.html" class="flex flex-col items-center no-underline">
-            <div class="w-12 h-12 btn-primary rounded-full flex items-center justify-center -mt-6 shadow-lg">
+        </a>
+        <a href="/add-product.html" class="flex flex-col items-center text-gray-500">
+            <div class="w-12 h-12 btn-primary rounded-full flex items-center justify-center -mt-6">
                 <i class="fas fa-plus text-white text-xl"></i>
             </div>
         </a>
-        <button class="flex flex-col items-center text-gray-500 border-none bg-transparent" onclick="showFavorites()">
+        <a href="javascript:void(0)" class="flex flex-col items-center text-gray-500" onclick="showFavorites()">
             <i class="far fa-heart text-xl"></i>
             <span class="text-xs mt-1">관심</span>
-        </button>
-        <a href="/profile.html" class="flex flex-col items-center text-gray-500 no-underline">
+        </a>
+        <a href="/login.html" class="flex flex-col items-center text-gray-500">
             <i class="far fa-user text-xl"></i>
             <span class="text-xs mt-1">내 정보</span>
         </a>
     </nav>
 
     <!-- 푸터 -->
-    <footer class="bg-gray-900 text-white py-12 mt-12 fade-in">
+    <footer class="bg-gray-900 text-white py-12 mt-12 md:mt-0 fade-in">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
@@ -376,28 +313,28 @@
                 <div>
                     <h4 class="text-lg font-bold mb-4">서비스</h4>
                     <ul class="space-y-2 text-gray-400">
-                        <li><a href="/" class="hover:text-white no-underline">홈</a></li>
-                        <li><a href="/login.html" class="hover:text-white no-underline">로그인</a></li>
-                        <li><button class="hover:text-white border-none bg-transparent text-left p-0" onclick="filterProducts('all')">식물마켓</button></li>
-                        <li><button class="hover:text-white border-none bg-transparent text-left p-0" onclick="showCommunity()">커뮤니티</button></li>
+                        <li><a href="/" class="hover:text-white">홈</a></li>
+                        <li><a href="/login.html" class="hover:text-white">로그인</a></li>
+                        <li><a href="javascript:void(0)" class="hover:text-white" onclick="filterProducts('all')">식물마켓</a></li>
+                        <li><a href="javascript:void(0)" class="hover:text-white" onclick="showCommunity()">커뮤니티</a></li>
                     </ul>
                 </div>
 
                 <div>
                     <h4 class="text-lg font-bold mb-4">도움말</h4>
                     <ul class="space-y-2 text-gray-400">
-                        <li><button class="hover:text-white border-none bg-transparent text-left p-0" onclick="showTerms()">이용약관</button></li>
-                        <li><button class="hover:text-white border-none bg-transparent text-left p-0" onclick="showPrivacy()">개인정보처리방침</button></li>
-                        <li><button class="hover:text-white border-none bg-transparent text-left p-0" onclick="showFAQ()">자주 묻는 질문</button></li>
-                        <li><button class="hover:text-white border-none bg-transparent text-left p-0" onclick="showContact()">문의하기</button></li>
+                        <li><a href="javascript:void(0)" class="hover:text-white" onclick="showTerms()">이용약관</a></li>
+                        <li><a href="javascript:void(0)" class="hover:text-white" onclick="showPrivacy()">개인정보처리방침</a></li>
+                        <li><a href="javascript:void(0)" class="hover:text-white" onclick="showFAQ()">자주 묻는 질문</a></li>
+                        <li><a href="javascript:void(0)" class="hover:text-white" onclick="showContact()">문의하기</a></li>
                     </ul>
                 </div>
 
                 <div>
                     <h4 class="text-lg font-bold mb-4">연락처</h4>
                     <ul class="space-y-2 text-gray-400">
-                        <li><i class="fas fa-envelope mr-2"></i>help_plantiaworld@gmail.com</li>
-                        <li><i class="fas fa-phone mr-2"></i>010-3024-7442</li>
+                        <li><i class="fas fa-envelope mr-2"></i>help@plantiaworld.com</li>
+                        <li><i class="fas fa-phone mr-2"></i>02-1234-5678</li>
                         <li class="flex items-center">
                             <i class="fab fa-instagram mr-2"></i>
                             <i class="fab fa-facebook mr-3"></i>
@@ -426,7 +363,7 @@
                                onkeypress="handleModalSearchEnter(event)">
                         <i class="fas fa-search absolute left-4 top-3.5 text-gray-400"></i>
                     </div>
-                    <button class="ml-4 text-gray-600 border-none bg-transparent" onclick="closeSearchModal()">
+                    <button class="ml-4 text-gray-600" onclick="closeSearchModal()">
                         취소
                     </button>
                 </div>
@@ -434,36 +371,11 @@
             <div class="p-4">
                 <h4 class="font-bold text-gray-800 mb-3">인기 검색어</h4>
                 <div class="flex flex-wrap gap-2">
-                    <button class="px-3 py-2 bg-gray-100 rounded-full text-sm hover:bg-green-100 border-none transition-colors" onclick="searchKeyword('몬스테라')">몬스테라</button>
-                    <button class="px-3 py-2 bg-gray-100 rounded-full text-sm hover:bg-green-100 border-none transition-colors" onclick="searchKeyword('다육이')">다육이</button>
-                    <button class="px-3 py-2 bg-gray-100 rounded-full text-sm hover:bg-green-100 border-none transition-colors" onclick="searchKeyword('화분')">화분</button>
-                    <button class="px-3 py-2 bg-gray-100 rounded-full text-sm hover:bg-green-100 border-none transition-colors" onclick="searchKeyword('스킨답서스')">스킨답서스</button>
-                    <button class="px-3 py-2 bg-gray-100 rounded-full text-sm hover:bg-green-100 border-none transition-colors" onclick="searchKeyword('선인장')">선인장</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 위치 선택 모달 -->
-    <div id="locationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md">
-            <div class="p-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">지역 선택</h3>
-                <div class="grid grid-cols-2 gap-3 mb-6">
-                    <button class="p-4 bg-gray-100 rounded-lg hover:bg-green-100 border-none transition-colors" onclick="selectLocation('서울')">서울</button>
-                    <button class="p-4 bg-gray-100 rounded-lg hover:bg-green-100 border-none transition-colors" onclick="selectLocation('경기')">경기</button>
-                    <button class="p-4 bg-gray-100 rounded-lg hover:bg-green-100 border-none transition-colors" onclick="selectLocation('인천')">인천</button>
-                    <button class="p-4 bg-gray-100 rounded-lg hover:bg-green-100 border-none transition-colors" onclick="selectLocation('부산')">부산</button>
-                    <button class="p-4 bg-gray-100 rounded-lg hover:bg-green-100 border-none transition-colors" onclick="selectLocation('대구')">대구</button>
-                    <button class="p-4 bg-gray-100 rounded-lg hover:bg-green-100 border-none transition-colors" onclick="selectLocation('광주')">광주</button>
-                </div>
-                <div class="flex justify-end space-x-3">
-                    <button class="px-4 py-2 text-gray-600 hover:text-gray-800 border-none bg-transparent" onclick="closeLocationModal()">
-                        취소
-                    </button>
-                    <button class="px-4 py-2 btn-primary text-white rounded-lg border-none" onclick="saveLocation()">
-                        확인
-                    </button>
+                    <button class="px-3 py-2 bg-gray-100 rounded-full text-sm hover:bg-green-100" onclick="searchKeyword('몬스테라')">몬스테라</button>
+                    <button class="px-3 py-2 bg-gray-100 rounded-full text-sm hover:bg-green-100" onclick="searchKeyword('다육이')">다육이</button>
+                    <button class="px-3 py-2 bg-gray-100 rounded-full text-sm hover:bg-green-100" onclick="searchKeyword('화분')">화분</button>
+                    <button class="px-3 py-2 bg-gray-100 rounded-full text-sm hover:bg-green-100" onclick="searchKeyword('스킨답서스')">스킨답서스</button>
+                    <button class="px-3 py-2 bg-gray-100 rounded-full text-sm hover:bg-green-100" onclick="searchKeyword('선인장')">선인장</button>
                 </div>
             </div>
         </div>
@@ -475,170 +387,32 @@
         let currentFilter = 'all';
         let currentSort = 'recent';
         let userLocation = '';
-        let selectedLocation = '';
 
         // 페이지 로드
         document.addEventListener('DOMContentLoaded', function() {
-            initializeSampleData();
             loadProducts();
             checkLoginStatus();
             updateUserLocation();
             setupEventListeners();
+        });
+
+        // 상품 데이터 불러오기
+        function loadProducts() {
+            allProducts = JSON.parse(localStorage.getItem('plantiaProducts') || '[]');
             
-            // 로딩 스피너 제거 (3초 후 자동)
+            // 조회수 기준으로 인기 상품 정렬 (임시)
+            allProducts.sort((a, b) => (b.views || 0) - (a.views || 0));
+            
+            displayProducts();
+            displayLocalProducts();
+            
+            // 1초 후 로딩 스피너 제거
             setTimeout(() => {
                 const spinner = document.querySelector('.loading-spinner');
                 if (spinner && spinner.parentElement) {
                     spinner.parentElement.remove();
                 }
-            }, 3000);
-        });
-
-        // 샘플 데이터 초기화
-        function initializeSampleData() {
-            const existingProducts = localStorage.getItem('plantiaProducts');
-            if (!existingProducts) {
-                const sampleProducts = [
-                    {
-                        id: 1,
-                        title: "몬스테라 중형 화분",
-                        price: 25000,
-                        category: "관엽식물",
-                        status: "판매중",
-                        sellerLocation: "서울 강남구",
-                        likes: 24,
-                        views: 156,
-                        createdDate: "2023-10-15",
-                        images: [],
-                        description: "건강한 몬스테라 중형 크기입니다."
-                    },
-                    {
-                        id: 2,
-                        title: "다육이 세트",
-                        price: 15000,
-                        category: "다육이",
-                        status: "판매중",
-                        sellerLocation: "경기 성남시",
-                        likes: 18,
-                        views: 98,
-                        createdDate: "2023-10-16",
-                        images: [],
-                        description: "3종 다육이 세트"
-                    },
-                    {
-                        id: 3,
-                        title: "테라코타 화분 대형",
-                        price: 18000,
-                        category: "화분/흙",
-                        status: "판매중",
-                        sellerLocation: "인천 부평구",
-                        likes: 12,
-                        views: 67,
-                        createdDate: "2023-10-14",
-                        images: [],
-                        description: "테라코타 대형 화분"
-                    },
-                    {
-                        id: 4,
-                        title: "스킨답서스 무료나눔",
-                        price: 0,
-                        category: "나눔",
-                        status: "판매중",
-                        sellerLocation: "서울 마포구",
-                        likes: 32,
-                        views: 210,
-                        createdDate: "2023-10-17",
-                        images: [],
-                        description: "잘 자란 스킨답서스 분양합니다"
-                    },
-                    {
-                        id: 5,
-                        title: "식물 키우기 노하우",
-                        price: 0,
-                        category: "정보공유",
-                        status: "정보",
-                        sellerLocation: "부산 해운대구",
-                        likes: 45,
-                        views: 312,
-                        createdDate: "2023-10-13",
-                        images: [],
-                        description: "관엽식물 키우는 방법 공유"
-                    },
-                    {
-                        id: 6,
-                        title: "선인장 미니",
-                        price: 8000,
-                        category: "다육이",
-                        status: "판매완료",
-                        sellerLocation: "대구 중구",
-                        likes: 8,
-                        views: 54,
-                        createdDate: "2023-10-12",
-                        images: [],
-                        description: "귀여운 미니 선인장"
-                    },
-                    {
-                        id: 7,
-                        title: "토분 3호",
-                        price: 12000,
-                        category: "화분/흙",
-                        status: "판매중",
-                        sellerLocation: "광주 북구",
-                        likes: 15,
-                        views: 89,
-                        createdDate: "2023-10-18",
-                        images: [],
-                        description: "전통 토분 3호 사이즈"
-                    },
-                    {
-                        id: 8,
-                        title: "필로덴드론",
-                        price: 22000,
-                        category: "관엽식물",
-                        status: "판매중",
-                        sellerLocation: "서울 서초구",
-                        likes: 28,
-                        views: 134,
-                        createdDate: "2023-10-19",
-                        images: [],
-                        description: "필로덴드론 중대형"
-                    },
-                    {
-                        id: 9,
-                        title: "식물용 비료",
-                        price: 5000,
-                        category: "화분/흙",
-                        status: "판매중",
-                        sellerLocation: "경기 수원시",
-                        likes: 10,
-                        views: 76,
-                        createdDate: "2023-10-15",
-                        images: [],
-                        description: "유기농 식물용 비료"
-                    },
-                    {
-                        id: 10,
-                        title: "행잉플랜트",
-                        price: 0,
-                        category: "나눔",
-                        status: "판매중",
-                        sellerLocation: "인천 연수구",
-                        likes: 21,
-                        views: 103,
-                        createdDate: "2023-10-20",
-                        images: [],
-                        description: "행잉플랜트 무료 나눔"
-                    }
-                ];
-                localStorage.setItem('plantiaProducts', JSON.stringify(sampleProducts));
-            }
-        }
-
-        // 상품 데이터 불러오기
-        function loadProducts() {
-            allProducts = JSON.parse(localStorage.getItem('plantiaProducts') || '[]');
-            displayProducts();
-            displayLocalProducts();
+            }, 1000);
         }
 
         // 상품 표시
@@ -650,25 +424,22 @@
             let filteredProducts = allProducts;
             if (currentFilter !== 'all') {
                 filteredProducts = allProducts.filter(product => 
-                    product.category === currentFilter
+                    product.category === currentFilter || 
+                    (product.tags && product.tags.includes(currentFilter))
                 );
             }
 
             // 정렬
             if (currentSort === 'price') {
                 filteredProducts.sort((a, b) => a.price - b.price);
-            } else {
-                filteredProducts.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+            } else if (currentSort === 'recent') {
+                filteredProducts.sort((a, b) => new Date(b.createdDate || 0) - new Date(a.createdDate || 0));
             }
 
             // 섹션 제목 업데이트
             const sectionTitle = document.getElementById('sectionTitle');
             if (sectionTitle) {
-                if (currentFilter === 'all') {
-                    sectionTitle.textContent = currentSort === 'recent' ? '최신 식물' : '인기 식물';
-                } else {
-                    sectionTitle.textContent = currentFilter;
-                }
+                sectionTitle.textContent = currentFilter === 'all' ? '인기 식물' : `${currentFilter} 상품`;
             }
 
             // 상품이 없을 때
@@ -685,10 +456,10 @@
 
             // 상품 등록하기 카드 추가 (마지막에)
             container.innerHTML += `
-                <a href="/add-product.html" class="product-card bg-white rounded-xl overflow-hidden shadow-sm flex items-center justify-center border-2 border-dashed border-green-200 hover:border-green-400 transition-colors">
+                <a href="/add-product.html" class="product-card bg-white rounded-xl overflow-hidden shadow-sm flex items-center justify-center">
                     <div class="text-center p-6">
-                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-plus text-green-600 text-2xl"></i>
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-plus text-green-600"></i>
                         </div>
                         <p class="text-green-600 font-medium">상품 등록하기</p>
                     </div>
@@ -699,14 +470,14 @@
         // 빈 상태 표시
         function createEmptyState() {
             return `
-                <div class="col-span-full empty-state rounded-2xl p-8 text-center">
+                <div class="col-span-2 md:col-span-3 lg:col-span-6 empty-state rounded-2xl p-8 text-center">
                     <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-leaf text-green-600 text-2xl"></i>
                     </div>
                     <h3 class="text-xl font-bold text-gray-800 mb-2">등록된 상품이 없습니다</h3>
                     <p class="text-gray-600 mb-6">첫 번째 상품을 등록하고 이웃과 나눠보세요!</p>
                     <a href="/add-product.html" 
-                       class="btn-primary text-white px-6 py-3 rounded-full font-medium inline-block no-underline">
+                       class="btn-primary text-white px-6 py-3 rounded-full font-medium inline-block">
                         <i class="fas fa-plus mr-2"></i>상품 등록하기
                     </a>
                 </div>
@@ -715,54 +486,40 @@
 
         // 상품 카드 생성
         function createProductCard(product) {
-            const imageUrl = 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=500';
-            const isFree = product.price === 0;
-            const priceText = isFree ? '무료나눔' : `${Number(product.price).toLocaleString()}원`;
+            // 이미지 URL (실제 데이터가 없으면 기본 이미지)
+            let imageUrl = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23e8f5e9"/><text x="50" y="50" font-family="Arial" font-size="14" fill="%232e8b57" text-anchor="middle" dy=".3em">🌿</text></svg>';
+            
+            if (product.images && product.images.length > 0 && product.images[0].startsWith('http')) {
+                imageUrl = product.images[0];
+            }
 
             return `
                 <a href="/product-detail.html?id=${product.id}" 
-                   class="product-card bg-white rounded-xl overflow-hidden shadow-sm block no-underline">
-                    <div class="product-image-container">
+                   class="product-card bg-white rounded-xl overflow-hidden shadow-sm block">
+                    <div class="relative pb-[100%]">
                         <img src="${imageUrl}" 
                              alt="${product.title}" 
-                             class="product-image">
+                             class="absolute h-full w-full object-cover"
+                             onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\" viewBox=\"0 0 100 100\"><rect width=\"100\" height=\"100\" fill=\"%23e8f5e9\"/><text x=\"50\" y=\"50\" font-family=\"Arial\" font-size=\"14\" fill=\"%232e8b57\" text-anchor=\"middle\" dy=\".3em\">🌿</text></svg>'">
                         ${product.status === '판매완료' ? `
-                            <div class="sold-out-badge">판매완료</div>
-                        ` : ''}
-                        ${isFree ? `
-                            <div class="sold-out-badge bg-green-600">무료나눔</div>
+                            <div class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+                                <span class="text-white font-bold text-lg">판매완료</span>
+                            </div>
                         ` : ''}
                     </div>
                     <div class="p-3">
-                        <h3 class="font-medium text-gray-800 truncate mb-1">${product.title}</h3>
-                        <div class="flex items-center justify-between">
-                            <span class="price-tag">${priceText}</span>
+                        <h3 class="font-medium text-gray-800 truncate">${product.title}</h3>
+                        <p class="text-gray-900 font-bold mt-1">${Number(product.price).toLocaleString()}원</p>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="text-xs text-gray-500">${product.sellerLocation || '지역정보'}</span>
                             <div class="flex items-center text-gray-400">
                                 <i class="far fa-heart text-sm"></i>
                                 <span class="text-xs ml-1">${product.likes || 0}</span>
                             </div>
                         </div>
-                        <div class="flex items-center justify-between mt-2">
-                            <span class="location-tag">${product.sellerLocation || '지역정보'}</span>
-                            <span class="text-xs text-gray-400">${formatDate(product.createdDate)}</span>
-                        </div>
                     </div>
                 </a>
             `;
-        }
-
-        // 날짜 포맷팅
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffTime = Math.abs(now - date);
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays === 0) return '오늘';
-            if (diffDays === 1) return '어제';
-            if (diffDays < 7) return `${diffDays}일전`;
-            if (diffDays < 30) return `${Math.floor(diffDays/7)}주전`;
-            return date.toLocaleDateString('ko-KR');
         }
 
         // 지역별 상품 표시
@@ -770,13 +527,14 @@
             const user = JSON.parse(localStorage.getItem('plantiaUser') || '{}');
             if (!user.location) return;
 
-            const userProvince = user.location.split(' ')[0];
+            const userProvince = user.location.split(' ')[0]; // '서울' 부분만 추출
             const localProducts = allProducts.filter(product => 
                 product.sellerLocation && product.sellerLocation.includes(userProvince)
             );
 
             if (localProducts.length === 0) return;
 
+            // 섹션 표시
             const section = document.getElementById('localProductsSection');
             const title = document.getElementById('localSectionTitle');
             const grid = document.getElementById('localProductGrid');
@@ -795,106 +553,24 @@
         // 로그인 상태 확인
         function checkLoginStatus() {
             const user = localStorage.getItem('plantiaUser');
-            const authButtonsContainer = document.getElementById('authButtons');
+            const loginBtn = document.getElementById('loginBtn');
             
-            if (!authButtonsContainer) return;
-            
-            if (user) {
+            if (user && loginBtn) {
                 const userData = JSON.parse(user);
-                updateUIForLoggedInUser(userData);
-            } else {
-                updateUIForLoggedOutUser();
-            }
-        }
-
-        // 로그인 상태일 때 UI
-        function updateUIForLoggedInUser(userData) {
-            const authButtonsContainer = document.getElementById('authButtons');
-            if (!authButtonsContainer) return;
-            
-            authButtonsContainer.innerHTML = `
-                <div class="user-menu relative">
-                    <button class="flex items-center text-gray-700 hover:text-green-700 focus:outline-none border-none bg-transparent">
-                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                            <span class="text-green-600 font-bold">${userData.name ? userData.name.charAt(0) : 'U'}</span>
-                        </div>
-                        <span class="ml-2 hidden md:inline">${userData.name || '사용자'}</span>
-                        <i class="fas fa-chevron-down ml-1 text-xs"></i>
-                    </button>
-                    
-                    <div class="user-menu-dropdown">
-                        <a href="/profile.html" class="block px-4 py-3 text-gray-700 hover:bg-green-50 no-underline">
-                            <i class="fas fa-user-circle mr-3"></i>내 프로필
-                        </a>
-                        <button onclick="showMyProducts()" class="w-full text-left px-4 py-3 text-gray-700 hover:bg-green-50 border-none bg-transparent">
-                            <i class="fas fa-leaf mr-3"></i>내 상품
-                        </button>
-                        <button onclick="showFavorites()" class="w-full text-left px-4 py-3 text-gray-700 hover:bg-green-50 border-none bg-transparent">
-                            <i class="fas fa-heart mr-3"></i>관심 목록
-                        </button>
-                        <div class="border-t my-2"></div>
-                        <button onclick="logout()" class="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 border-none bg-transparent">
-                            <i class="fas fa-sign-out-alt mr-3"></i>로그아웃
-                        </button>
+                loginBtn.innerHTML = `
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-green-600"></i>
                     </div>
-                </div>
-            `;
-            
-            const locationDisplay = document.getElementById('userLocationDisplay');
-            if (locationDisplay && userData.location) {
-                locationDisplay.textContent = userData.location;
-            }
-        }
-
-        // 비로그인 상태일 때 UI
-        function updateUIForLoggedOutUser() {
-            const authButtonsContainer = document.getElementById('authButtons');
-            if (!authButtonsContainer) return;
-            
-            authButtonsContainer.innerHTML = `
-                <a href="/login.html" class="flex items-center text-gray-700 hover:text-green-700 no-underline">
-                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                        <i class="fas fa-user text-gray-600"></i>
-                    </div>
-                    <span class="ml-2 hidden md:inline">로그인</span>
-                </a>
-            `;
-            
-            const locationDisplay = document.getElementById('userLocationDisplay');
-            if (locationDisplay) {
-                locationDisplay.textContent = '전국';
-            }
-        }
-
-        // 로그아웃
-        function logout() {
-            if (confirm('정말 로그아웃 하시겠습니까?')) {
-                localStorage.removeItem('plantiaUser');
-                showMessage('로그아웃 되었습니다.', 'success');
-                setTimeout(() => {
-                    checkLoginStatus();
-                    location.reload();
-                }, 1000);
-            }
-        }
-
-        // 내 상품 보기
-        function showMyProducts() {
-            const user = JSON.parse(localStorage.getItem('plantiaUser') || '{}');
-            const myProducts = allProducts.filter(product => 
-                product.seller === user.name || product.sellerEmail === user.email
-            );
-            
-            if (myProducts.length > 0) {
-                currentFilter = 'my';
-                allProducts.forEach(product => {
-                    if (product.seller === user.name || product.sellerEmail === user.email) {
-                        product.isMine = true;
-                    }
-                });
-                displayProducts();
-            } else {
-                alert('등록한 상품이 없습니다.');
+                    <span class="ml-2 hidden md:inline">${userData.name}</span>
+                `;
+                loginBtn.href = '/profile.html';
+                loginBtn.onclick = null;
+                
+                // 헤더에 사용자 지역 표시
+                const locationDisplay = document.getElementById('userLocationDisplay');
+                if (locationDisplay && userData.location) {
+                    locationDisplay.textContent = userData.location;
+                }
             }
         }
 
@@ -912,98 +588,44 @@
 
         // 이벤트 리스너 설정
         function setupEventListeners() {
-            // 모달 닫기 (바깥 클릭)
-            document.addEventListener('click', function(event) {
-                const searchModal = document.getElementById('searchModal');
-                const locationModal = document.getElementById('locationModal');
-                
-                if (searchModal && !searchModal.contains(event.target) && event.target.id !== 'mobileSearch') {
-                    if (!event.target.closest('.fa-search')) {
-                        searchModal.classList.add('hidden');
+            // 검색 모달
+            window.showSearchModal = function() {
+                document.getElementById('searchModal').classList.remove('hidden');
+                document.getElementById('modalSearchInput').focus();
+            };
+
+            window.closeSearchModal = function() {
+                document.getElementById('searchModal').classList.add('hidden');
+            };
+
+            window.handleModalSearchEnter = function(event) {
+                if (event.key === 'Enter') {
+                    const keyword = document.getElementById('modalSearchInput').value.trim();
+                    if (keyword) {
+                        searchProducts(keyword);
+                        closeSearchModal();
                     }
                 }
-                
-                if (locationModal && !locationModal.contains(event.target)) {
-                    if (event.target.id !== 'userLocationDisplay') {
-                        locationModal.classList.add('hidden');
-                    }
-                }
-            });
+            };
+
+            window.searchKeyword = function(keyword) {
+                document.getElementById('modalSearchInput').value = keyword;
+                searchProducts(keyword);
+                closeSearchModal();
+            };
         }
-
-        // 모달 관련 함수들
-        window.showSearchModal = function() {
-            document.getElementById('searchModal').classList.remove('hidden');
-            document.getElementById('modalSearchInput').focus();
-        };
-
-        window.closeSearchModal = function() {
-            document.getElementById('searchModal').classList.add('hidden');
-        };
-
-        window.handleModalSearchEnter = function(event) {
-            if (event.key === 'Enter') {
-                const keyword = document.getElementById('modalSearchInput').value.trim();
-                if (keyword) {
-                    searchProducts(keyword);
-                    closeSearchModal();
-                }
-            }
-        };
-
-        // 위치 모달
-        window.showLocationModal = function() {
-            document.getElementById('locationModal').classList.remove('hidden');
-        };
-
-        window.closeLocationModal = function() {
-            document.getElementById('locationModal').classList.add('hidden');
-        };
-
-        window.selectLocation = function(location) {
-            selectedLocation = location;
-        };
-
-        window.saveLocation = function() {
-            if (selectedLocation) {
-                userLocation = selectedLocation;
-                const locationDisplay = document.getElementById('userLocationDisplay');
-                if (locationDisplay) {
-                    locationDisplay.textContent = selectedLocation;
-                }
-                showMessage('지역이 변경되었습니다.', 'success');
-                closeLocationModal();
-            }
-        };
-
-        // 검색
-        window.searchKeyword = function(keyword) {
-            document.getElementById('modalSearchInput').value = keyword;
-            searchProducts(keyword);
-            closeSearchModal();
-        };
-
-        window.handleSearchEnter = function(event) {
-            if (event.key === 'Enter') {
-                const keyword = event.target.value.trim();
-                if (keyword) {
-                    searchProducts(keyword);
-                }
-            }
-        };
 
         // 상품 필터링
         function filterProducts(category) {
             currentFilter = category;
             
             // 카테고리 버튼 스타일 업데이트
-            const categoryButtons = document.querySelectorAll('.flex button');
-            categoryButtons.forEach(btn => {
+            document.querySelectorAll('.flex button').forEach(btn => {
                 btn.classList.remove('btn-primary', 'text-white');
                 btn.classList.add('bg-white', 'text-gray-700', 'border');
             });
             
-            const activeBtn = Array.from(categoryButtons)
+            const activeBtn = Array.from(document.querySelectorAll('.flex button'))
                 .find(btn => btn.textContent.includes(category) || 
                       (category === 'all' && btn.textContent.includes('전체')));
             
@@ -1019,49 +641,52 @@
         function sortProducts(type) {
             currentSort = type;
             
-            const priceBtn = document.getElementById('sortPriceBtn');
-            const recentBtn = document.getElementById('sortRecentBtn');
+            // 정렬 버튼 스타일 업데이트
+            document.getElementById('sortPriceBtn').classList.remove('text-green-600');
+            document.getElementById('sortPriceBtn').classList.add('text-gray-600');
+            document.getElementById('sortRecentBtn').classList.remove('text-green-600');
+            document.getElementById('sortRecentBtn').classList.add('text-gray-600');
             
-            if (priceBtn && recentBtn) {
-                priceBtn.classList.remove('text-green-600');
-                priceBtn.classList.add('text-gray-600');
-                recentBtn.classList.remove('text-green-600');
-                recentBtn.classList.add('text-gray-600');
-                
-                if (type === 'price') {
-                    priceBtn.classList.remove('text-gray-600');
-                    priceBtn.classList.add('text-green-600');
-                } else {
-                    recentBtn.classList.remove('text-gray-600');
-                    recentBtn.classList.add('text-green-600');
-                }
+            if (type === 'price') {
+                document.getElementById('sortPriceBtn').classList.remove('text-gray-600');
+                document.getElementById('sortPriceBtn').classList.add('text-green-600');
+            } else {
+                document.getElementById('sortRecentBtn').classList.remove('text-gray-600');
+                document.getElementById('sortRecentBtn').classList.add('text-green-600');
             }
             
             displayProducts();
         }
 
         // 검색 기능
+        function handleSearchEnter(event) {
+            if (event.key === 'Enter') {
+                const keyword = event.target.value.trim();
+                if (keyword) {
+                    searchProducts(keyword);
+                }
+            }
+        }
+
         function searchProducts(keyword) {
             const searchResults = allProducts.filter(product => 
                 product.title.toLowerCase().includes(keyword.toLowerCase()) ||
-                (product.description && product.description.toLowerCase().includes(keyword.toLowerCase())) ||
-                product.category.toLowerCase().includes(keyword.toLowerCase())
+                product.description.toLowerCase().includes(keyword.toLowerCase()) ||
+                (product.tags && product.tags.some(tag => tag.toLowerCase().includes(keyword.toLowerCase())))
             );
 
+            // 검색 결과를 보여주는 임시 알림
             if (searchResults.length > 0) {
-                // 검색 결과 필터링
-                currentFilter = 'search';
-                allProducts = searchResults;
-                displayProducts();
-                showMessage(`"${keyword}" 검색 결과: ${searchResults.length}개`, 'success');
+                alert(`"${keyword}" 검색 결과: ${searchResults.length}개 상품을 찾았습니다.`);
+                // 실제로는 검색 결과 페이지로 이동하거나 모달로 표시
             } else {
-                showMessage(`"${keyword}"에 대한 검색 결과가 없습니다.`, 'error');
+                alert(`"${keyword}"에 대한 검색 결과가 없습니다.`);
             }
         }
 
         // 지역 상품 새로고침
         function refreshLocalProducts() {
-            loadProducts();
+            loadProducts(); // 전체 상품 다시 불러오기
             showMessage('지역 상품을 새로고침했습니다.', 'success');
         }
 
@@ -1096,7 +721,7 @@
         }
 
         function showContact() {
-            alert('문의하기는 준비 중입니다.\nhelp_plantiaworld@gmail.com으로 연락주세요.');
+            alert('문의하기는 준비 중입니다.\nhelp@plantiaworld.com으로 연락주세요.');
         }
 
         // 메시지 표시 함수
@@ -1113,12 +738,12 @@
                 info: 'bg-blue-100 border-blue-500 text-blue-700'
             };
             
-            messageBox.className = `fixed top-4 left-1/2 transform -translate-x-1/2 p-4 rounded-xl border-2 shadow-lg z-50 ${colors[type] || colors.info}`;
+            messageBox.className = `fixed top-4 left-1/2 transform -translate-x-1/2 p-4 rounded-xl border-2 shadow-lg z-50 ${colors[type]}`;
             messageBox.innerHTML = `
                 <div class="flex items-center">
                     <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-3 text-lg"></i>
                     <span class="font-medium">${message}</span>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700 border-none bg-transparent">
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -1140,8 +765,9 @@
             }
         });
 
-        // 페이지 새로고침 시
+        // 상품 등록 페이지에서 돌아왔을 때 새로고침
         if (performance.navigation.type === 1) {
+            // 페이지가 새로고침된 경우
             loadProducts();
         }
     </script>
