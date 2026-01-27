@@ -830,4 +830,94 @@
                 
                 const response = responses[Math.floor(Math.random() * responses.length)];
                 
-                chatMessages.push
+                chatMessages.push({
+                    sender: 'seller',
+                    text: response,
+                    time: `${now.getHours()}:${(now.getMinutes() + 1).toString().padStart(2, '0')}`
+                });
+                
+                updateChatDisplay();
+            }, 1000);
+        }
+
+        // 빠른 질문
+        function quickQuestion(question) {
+            document.getElementById('chatInput').value = question;
+            sendMessage();
+        }
+
+        // 새 채팅 시작
+        function startNewChat() {
+            if (confirm('새로운 대화를 시작하시겠습니까?\n기존 대화 내용은 저장되지 않습니다.')) {
+                chatMessages = [];
+                updateChatDisplay();
+            }
+        }
+
+        // 채팅 열기
+        function openChat() {
+            switchTab('chat');
+            document.getElementById('chatInput').focus();
+        }
+
+        // 비슷한 상품 표시
+        function displaySimilarProducts() {
+            if (!currentProduct) return;
+            
+            const products = JSON.parse(localStorage.getItem('plantiaProducts') || '[]');
+            const similar = products
+                .filter(p => p.id !== currentProduct.id && p.category === currentProduct.category)
+                .slice(0, 4); // 최대 4개
+            
+            const container = document.getElementById('similarProducts');
+            container.innerHTML = '';
+            
+            if (similar.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-2 text-center py-4">비슷한 상품이 없습니다.</p>';
+                return;
+            }
+            
+            similar.forEach(product => {
+                const card = document.createElement('a');
+                card.href = `/product-detail.html?id=${product.id}`;
+                card.className = 'block bg-gray-50 rounded-xl overflow-hidden hover:shadow-lg transition';
+                card.innerHTML = `
+                    <div class="h-32 bg-green-100 flex items-center justify-center">
+                        <i class="fas fa-leaf text-green-300 text-3xl"></i>
+                    </div>
+                    <div class="p-3">
+                        <h4 class="font-medium text-gray-800 truncate">${product.title}</h4>
+                        <p class="text-green-600 font-bold mt-1">${product.price.toLocaleString()}원</p>
+                        <p class="text-xs text-gray-500 mt-1">${product.sellerLocation || ''}</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // CSS 동적 추가
+        const style = document.createElement('style');
+        style.textContent = `
+            .tab-content {
+                animation: fadeIn 0.3s ease;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            #chatMessages::-webkit-scrollbar {
+                width: 6px;
+            }
+            #chatMessages::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+            }
+            #chatMessages::-webkit-scrollbar-thumb {
+                background: #c1c1c1;
+                border-radius: 10px;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
