@@ -3,716 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>상품 등록 - PlantiaWorld</title>
-    <!-- Font Awesome -->
+    <title>식물 등록 - PlantiaWorld</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .plant-gradient {
-            background: linear-gradient(135deg, #f8fdf8 0%, #e8f5e9 100%);
-        }
-        .input-focus:focus {
-            box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.2);
-            border-color: #2e8b57;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #2e8b57 0%, #32cd32 100%);
-            transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #228B22 0%, #2e8b57 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(46, 139, 87, 0.3);
-        }
-        .image-preview {
-            transition: all 0.3s ease;
-            border: 2px dashed #d1d5db;
-        }
-        .image-preview:hover {
-            border-color: #2e8b57;
-        }
-        .price-input::-webkit-inner-spin-button,
-        .price-input::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .tag {
-            background-color: #e8f5e9;
-            border: 1px solid #2e8b57;
-            transition: all 0.2s ease;
-        }
-        .tag:hover {
-            background-color: #2e8b57;
-            color: white;
-        }
-        .radio-custom:checked {
-            background-color: #2e8b57;
-            border-color: #2e8b57;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f9fafb; }
+        .input-focus:focus { outline: none; border-color: #2e8b57; ring: 2px; ring-color: #2e8b57; }
+        .btn-submit { background: linear-gradient(135deg, #2e8b57 0%, #32cd32 100%); transition: all 0.3s; }
+        .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+        .preview-item { position: relative; width: 100px; height: 100px; shrink-0; }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 1px solid #e5e7eb; }
+        .delete-btn { position: absolute; -top: 6px; -right: 6px; background: rgba(0,0,0,0.7); color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 1.5px solid white; z-index: 10; }
     </style>
 </head>
-<body class="plant-gradient min-h-screen">
-    <!-- 헤더 (메인 페이지와 동일) -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex items-center justify-between">
-                <!-- 로고 -->
-                <div class="flex items-center space-x-3">
-                    <a href="/" class="flex items-center space-x-2">
-                        <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                            <i class="fas fa-leaf text-white"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-xl font-bold text-green-800">PlantiaWorld</h1>
-                            <p class="text-xs text-gray-600 hidden md:block">이웃과 식물을 나누는 공간</p>
-                        </div>
-                    </a>
-                </div>
+<body>
 
-                <!-- 액션 버튼 -->
-                <div class="flex items-center space-x-3">
-                    <a href="/" class="text-gray-600 hover:text-green-700">
-                        <i class="fas fa-times text-xl"></i>
-                    </a>
-                </div>
-            </div>
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex items-center">
+            <button onclick="history.back()" class="text-gray-600 hover:text-green-700 mr-4">
+                <i class="fas fa-arrow-left text-xl"></i>
+            </button>
+            <h1 class="text-xl font-bold text-gray-800">식물 나눔/판매 등록</h1>
         </div>
     </header>
 
-    <!-- 메인 컨텐츠 -->
-    <main class="container mx-auto px-4 py-6 max-w-4xl">
-        <!-- 진행 단계 표시 -->
-        <div class="mb-8">
-            <div class="flex items-center justify-between mb-2">
-                <h1 class="text-2xl font-bold text-gray-800">상품 등록</h1>
-                <span class="text-sm text-gray-500">1/3 단계</span>
-            </div>
-            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div class="h-full bg-green-600 w-1/3"></div>
-            </div>
-        </div>
-
-        <!-- 상품 등록 폼 -->
-        <form id="productForm" class="space-y-8">
-            <!-- 1. 사진 등록 -->
-            <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-camera mr-2 text-green-600"></i>사진 등록
-                </h2>
-                <p class="text-gray-600 mb-6">상품 사진을 등록해주세요. 첫 번째 사진이 대표사진으로 등록됩니다.</p>
-                
-                <!-- 이미지 업로드 영역 -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <!-- 메인 이미지 -->
-                    <div class="relative">
-                        <div id="mainImagePreview" class="image-preview rounded-xl h-40 flex flex-col items-center justify-center cursor-pointer" onclick="document.getElementById('mainImageInput').click()">
-                            <i class="fas fa-camera text-3xl text-gray-300 mb-2"></i>
-                            <p class="text-gray-500 text-sm">대표사진</p>
-                            <p class="text-gray-400 text-xs">클릭하여 업로드</p>
-                        </div>
-                        <input type="file" id="mainImageInput" accept="image/*" class="hidden" onchange="previewImage(event, 'main')">
-                    </div>
-
-                    <!-- 서브 이미지들 -->
-                    <div id="subImagePreview1" class="image-preview rounded-xl h-40 flex flex-col items-center justify-center cursor-pointer" onclick="document.getElementById('subImageInput1').click()">
-                        <i class="fas fa-plus text-2xl text-gray-300 mb-2"></i>
-                        <p class="text-gray-500 text-sm">추가사진 1</p>
-                    </div>
-                    <input type="file" id="subImageInput1" accept="image/*" class="hidden" onchange="previewImage(event, 'sub1')">
-
-                    <div id="subImagePreview2" class="image-preview rounded-xl h-40 flex flex-col items-center justify-center cursor-pointer" onclick="document.getElementById('subImageInput2').click()">
-                        <i class="fas fa-plus text-2xl text-gray-300 mb-2"></i>
-                        <p class="text-gray-500 text-sm">추가사진 2</p>
-                    </div>
-                    <input type="file" id="subImageInput2" accept="image/*" class="hidden" onchange="previewImage(event, 'sub2')">
-
-                    <div id="subImagePreview3" class="image-preview rounded-xl h-40 flex flex-col items-center justify-center cursor-pointer" onclick="document.getElementById('subImageInput3').click()">
-                        <i class="fas fa-plus text-2xl text-gray-300 mb-2"></i>
-                        <p class="text-gray-500 text-sm">추가사진 3</p>
-                    </div>
-                    <input type="file" id="subImageInput3" accept="image/*" class="hidden" onchange="previewImage(event, 'sub3')">
+    <main class="container mx-auto px-4 py-8 max-w-2xl">
+        <form id="productForm" class="space-y-6 bg-white p-6 md:p-8 rounded-3xl shadow-sm">
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-3">사진 등록 (최대 8장)</label>
+                <div class="flex flex-wrap gap-3">
+                    <label class="w-24 h-24 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors shrink-0">
+                        <i class="fas fa-camera text-gray-400 text-xl mb-1"></i>
+                        <span id="imageCountText" class="text-[10px] text-gray-400">0/8</span>
+                        <input type="file" id="imageInput" accept="image/*" class="hidden" multiple onchange="handleImageUpload(this)">
+                    </label>
+                    <div id="imagePreviewList" class="flex flex-wrap gap-3"></div>
                 </div>
-
-                <p class="text-xs text-gray-500">* 최대 4장까지 등록 가능합니다</p>
-                <p class="text-xs text-gray-500">* 사진은 가로/세로 비율에 맞게 잘라집니다</p>
             </div>
 
-            <!-- 2. 상품 정보 -->
-            <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-info-circle mr-2 text-green-600"></i>상품 정보
-                </h2>
+            <div>
+                <label for="title" class="block text-sm font-bold text-gray-700 mb-2">글 제목</label>
+                <input type="text" id="title" required placeholder="식물 이름이나 특징을 적어주세요" 
+                       class="w-full px-4 py-3 rounded-xl border border-gray-200 input-focus">
+            </div>
 
-                <!-- 상품명 -->
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-medium mb-2">
-                        상품명 *
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">카테고리</label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="category" value="관엽식물" class="hidden peer" checked>
+                        <div class="py-2 text-center border border-gray-200 rounded-lg peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:text-green-600 text-sm font-medium">관엽식물</div>
                     </label>
-                    <input type="text" id="productTitle" 
-                           class="w-full p-4 border border-gray-300 rounded-xl input-focus outline-none transition"
-                           placeholder="예) 몬스테라 대형화분 상태 좋음"
-                           maxlength="40" required>
-                    <div class="flex justify-between mt-1">
-                        <p class="text-xs text-gray-500">구매자들이 쉽게 찾을 수 있도록 상품명을 작성해주세요</p>
-                        <span id="titleCount" class="text-xs text-gray-500">0/40</span>
-                    </div>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="category" value="다육이" class="hidden peer">
+                        <div class="py-2 text-center border border-gray-200 rounded-lg peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:text-green-600 text-sm font-medium">다육식물</div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="category" value="화분/흙" class="hidden peer">
+                        <div class="py-2 text-center border border-gray-200 rounded-lg peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:text-green-600 text-sm font-medium">화분/용품</div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="category" value="정보공유" class="hidden peer">
+                        <div class="py-2 text-center border border-gray-200 rounded-lg peer-checked:bg-green-50 peer-checked:border-green-500 peer-checked:text-green-600 text-sm font-medium">정보공유</div>
+                    </label>
                 </div>
+            </div>
 
-                <!-- 카테고리 -->
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-medium mb-2">
-                        카테고리 *
-                    </label>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="radio" name="category" value="관엽식물" class="mr-3 w-5 h-5 radio-custom" required>
-                            <span class="flex items-center">
-                                <i class="fas fa-seedling mr-2 text-green-600"></i>관엽식물
-                            </span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="radio" name="category" value="다육이" class="mr-3 w-5 h-5 radio-custom">
-                            <span class="flex items-center">
-                                <i class="fas fa-spa mr-2 text-green-600"></i>다육이
-                            </span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="radio" name="category" value="화분/흙" class="mr-3 w-5 h-5 radio-custom">
-                            <span class="flex items-center">
-                                <i class="fas fa-tint mr-2 text-green-600"></i>화분/흙
-                            </span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="radio" name="category" value="영양제" class="mr-3 w-5 h-5 radio-custom">
-                            <span class="flex items-center">
-                                <i class="fas fa-flask mr-2 text-green-600"></i>영양제
-                            </span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="radio" name="category" value="씨앗" class="mr-3 w-5 h-5 radio-custom">
-                            <span class="flex items-center">
-                                <i class="fas fa-seedling mr-2 text-green-600"></i>씨앗
-                            </span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="radio" name="category" value="도구" class="mr-3 w-5 h-5 radio-custom">
-                            <span class="flex items-center">
-                                <i class="fas fa-tools mr-2 text-green-600"></i>도구
-                            </span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="radio" name="category" value="식물책" class="mr-3 w-5 h-5 radio-custom">
-                            <span class="flex items-center">
-                                <i class="fas fa-book mr-2 text-green-600"></i>식물책
-                            </span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="radio" name="category" value="나눔" class="mr-3 w-5 h-5 radio-custom">
-                            <span class="flex items-center">
-                                <i class="fas fa-gift mr-2 text-green-600"></i>나눔
-                            </span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- 가격 -->
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-medium mb-2">
-                        가격 *
-                    </label>
-                    <div class="flex items-center">
-                        <input type="number" id="price" 
-                               class="price-input w-full p-4 border border-gray-300 rounded-xl input-focus outline-none transition"
-                               placeholder="0"
-                               min="0"
-                               max="10000000"
-                               required>
-                        <span class="ml-4 text-gray-700 font-medium">원</span>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mt-3">
-                        <button type="button" class="price-tag px-3 py-2 rounded-lg border border-gray-300 hover:border-green-500" onclick="setPrice(10000)">1만원</button>
-                        <button type="button" class="price-tag px-3 py-2 rounded-lg border border-gray-300 hover:border-green-500" onclick="setPrice(20000)">2만원</button>
-                        <button type="button" class="price-tag px-3 py-2 rounded-lg border border-gray-300 hover:border-green-500" onclick="setPrice(50000)">5만원</button>
-                        <button type="button" class="price-tag px-3 py-2 rounded-lg border border-gray-300 hover:border-green-500" onclick="setPrice(100000)">10만원</button>
-                        <button type="button" class="price-tag px-3 py-2 rounded-lg border border-gray-300 hover:border-green-500" onclick="setPrice(0)">나눔</button>
-                    </div>
-                </div>
-
-                <!-- 상품 상태 -->
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-medium mb-2">
-                        상품 상태 *
-                    </label>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="radio" name="condition" value="새상품" class="mr-3 w-5 h-5 radio-custom" required>
-                            <span>새상품</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="radio" name="condition" value="거의새것" class="mr-3 w-5 h-5 radio-custom">
-                            <span>거의 새것</span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="radio" name="condition" value="사용감있음" class="mr-3 w-5 h-5 radio-custom">
-                            <span>사용감 있음</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- 상품 설명 -->
-                <div>
-                    <label class="block text-gray-700 font-medium mb-2">
-                        상품 설명 *
-                    </label>
-                    <textarea id="description" 
-                              class="w-full p-4 border border-gray-300 rounded-xl input-focus outline-none transition h-40"
-                              placeholder="상품의 상태, 거래 방식, 배송 방법 등을 자세히 적어주세요.&#10;예) 직거래 가능 지역: 강남역, 분당선&#10;배송: 택배 가능(선불)"
-                              maxlength="500"
-                              required></textarea>
-                    <div class="flex justify-between mt-1">
-                        <p class="text-xs text-gray-500">상세한 설명이 구매를 결정하는데 도움이 됩니다</p>
-                        <span id="descCount" class="text-xs text-gray-500">0/500</span>
+            <div>
+                <label for="price" class="block text-sm font-bold text-gray-700 mb-2">가격 (원)</label>
+                <div class="relative">
+                    <input type="number" id="price" placeholder="가격을 입력하세요 (0원 입력 시 나눔)" 
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 input-focus">
+                    <div class="absolute right-4 top-3 flex items-center">
+                        <input type="checkbox" id="isFree" onchange="togglePrice(this)" class="mr-2 h-4 w-4 rounded border-gray-300 text-green-600">
+                        <label for="isFree" class="text-sm text-gray-500">나눔</label>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. 거래 정보 -->
-            <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-exchange-alt mr-2 text-green-600"></i>거래 정보
-                </h2>
-
-                <!-- 거래 방식 -->
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-medium mb-2">
-                        거래 방식 *
-                    </label>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="checkbox" name="transaction" value="직거래" class="mr-3 w-5 h-5 checkbox-custom">
-                            <span class="flex items-center">
-                                <i class="fas fa-handshake mr-2 text-green-600"></i>직거래
-                            </span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="checkbox" name="transaction" value="택배" class="mr-3 w-5 h-5 checkbox-custom">
-                            <span class="flex items-center">
-                                <i class="fas fa-truck mr-2 text-green-600"></i>택배
-                            </span>
-                        </label>
-                        <label class="flex items-center p-3 border border-gray-300 rounded-lg hover:border-green-500 cursor-pointer">
-                            <input type="checkbox" name="transaction" value="무료나눔" class="mr-3 w-5 h-5 checkbox-custom">
-                            <span class="flex items-center">
-                                <i class="fas fa-gift mr-2 text-green-600"></i>무료나눔
-                            </span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- 지역 정보 (회원 정보에서 자동 가져오기) -->
-                <div>
-                    <label class="block text-gray-700 font-medium mb-2">
-                        거래 지역 *
-                    </label>
-                    <div class="p-4 bg-green-50 rounded-xl mb-4">
-                        <p class="text-green-700 font-medium">
-                            <i class="fas fa-map-marker-alt mr-2"></i>
-                            현재 설정된 지역: <span id="userLocation">서울 강남구</span>
-                        </p>
-                        <p class="text-sm text-gray-600 mt-1">회원가입 시 입력한 지역 정보가 자동으로 설정됩니다</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <select id="province" 
-                                class="w-full p-4 border border-gray-300 rounded-xl input-focus outline-none transition bg-white">
-                            <option value="">시/도 선택</option>
-                            <option value="서울" selected>서울특별시</option>
-                            <option value="경기">경기도</option>
-                            <option value="인천">인천광역시</option>
-                        </select>
-                        <select id="district" 
-                                class="w-full p-4 border border-gray-300 rounded-xl input-focus outline-none transition bg-white">
-                            <option value="">구/군 선택</option>
-                            <option value="강남구" selected>강남구</option>
-                            <option value="서초구">서초구</option>
-                            <option value="송파구">송파구</option>
-                        </select>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1">상품 검색 시 해당 지역 기준으로 노출됩니다</p>
-                </div>
+            <div>
+                <label for="description" class="block text-sm font-bold text-gray-700 mb-2">자세한 설명</label>
+                <textarea id="description" rows="5" required placeholder="식물의 상태, 크기, 키우는 법 등 이웃에게 알리고 싶은 정보를 적어주세요." 
+                          class="w-full px-4 py-3 rounded-xl border border-gray-200 input-focus"></textarea>
             </div>
 
-            <!-- 태그 입력 -->
-            <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-tags mr-2 text-green-600"></i>태그 추가 (선택)
-                </h2>
-                <div class="mb-4">
-                    <input type="text" id="tagInput" 
-                           class="w-full p-4 border border-gray-300 rounded-xl input-focus outline-none transition"
-                           placeholder="예) 몬스테라, 대형화분, 실내식물"
-                           onkeypress="addTagOnEnter(event)">
-                    <p class="text-xs text-gray-500 mt-1">엔터키로 태그를 추가하세요. 최대 5개까지 추가 가능합니다</p>
-                </div>
-                <div id="tagContainer" class="flex flex-wrap gap-2">
-                    <!-- 태그가 여기에 추가됩니다 -->
-                </div>
+            <div>
+                <label for="location" class="block text-sm font-bold text-gray-700 mb-2">거래 희망 지역</label>
+                <input type="text" id="location" required placeholder="예: 부산 해운대구 우동" 
+                       class="w-full px-4 py-3 rounded-xl border border-gray-200 input-focus">
             </div>
 
-            <!-- 안내사항 -->
-            <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
-                <h3 class="text-lg font-bold text-yellow-800 mb-3">
-                    <i class="fas fa-exclamation-circle mr-2"></i>안내사항
-                </h3>
-                <ul class="space-y-2 text-yellow-700">
-                    <li class="flex items-start">
-                        <i class="fas fa-check mr-2 mt-1 text-sm"></i>
-                        <span>거래 약속을 꼭 지켜주세요. 거래 파기 시 이용 제한될 수 있습니다.</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check mr-2 mt-1 text-sm"></i>
-                        <span>사진은 실제 상품과 동일하게 등록해주세요.</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check mr-2 mt-1 text-sm"></i>
-                        <span>허위 매물 등록 시 신고 및 제재를 받을 수 있습니다.</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check mr-2 mt-1 text-sm"></i>
-                        <span>식물의 건강 상태와 특이사항을 정확히 기재해주세요.</span>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- 버튼 -->
-            <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                <button type="button" onclick="saveAsDraft()" 
-                        class="border-2 border-green-600 text-green-600 hover:bg-green-50 font-bold py-4 px-8 rounded-xl text-lg flex-1">
-                    <i class="far fa-save mr-2"></i>임시 저장
-                </button>
-                <button type="submit" 
-                        class="btn-primary text-white font-bold py-4 px-8 rounded-xl text-lg flex-1">
-                    <i class="fas fa-check-circle mr-2"></i>상품 등록하기
+            <div class="pt-4">
+                <button type="submit" class="btn-submit w-full py-4 text-white font-bold rounded-xl shadow-lg text-lg">
+                    작성 완료하기
                 </button>
             </div>
         </form>
     </main>
 
-    <!-- 하단 네비게이션 (모바일) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-3 z-50">
-        <a href="/" class="flex flex-col items-center text-green-600">
-            <i class="fas fa-home text-xl"></i>
-            <span class="text-xs mt-1">홈</span>
-        </a>
-        <a href="#" class="flex flex-col items-center text-gray-500">
-            <i class="fas fa-search text-xl"></i>
-            <span class="text-xs mt-1">검색</span>
-        </a>
-        <a href="/add-product.html" class="flex flex-col items-center text-green-600">
-            <div class="w-12 h-12 btn-primary rounded-full flex items-center justify-center -mt-6">
-                <i class="fas fa-plus text-white text-xl"></i>
-            </div>
-        </a>
-        <a href="#" class="flex flex-col items-center text-gray-500">
-            <i class="far fa-heart text-xl"></i>
-            <span class="text-xs mt-1">관심</span>
-        </a>
-        <a href="/login.html" class="flex flex-col items-center text-gray-500">
-            <i class="far fa-user text-xl"></i>
-            <span class="text-xs mt-1">내 정보</span>
-        </a>
-    </nav>
-
     <script>
-        // 현재 사용자 정보 확인
-        document.addEventListener('DOMContentLoaded', function() {
-            const user = localStorage.getItem('plantiaUser');
-            if (!user) {
-                // 로그인 안되어 있으면 로그인 페이지로
-                alert('로그인이 필요한 서비스입니다.');
-                window.location.href = '/login.html';
+        let uploadedImages = []; // 압축된 이미지 데이터를 저장할 배열
+
+        // 이미지 처리 및 압축 함수
+        function handleImageUpload(input) {
+            const files = Array.from(input.files);
+            
+            if (uploadedImages.length + files.length > 8) {
+                alert("사진은 최대 8장까지만 등록할 수 있습니다.");
                 return;
             }
 
-            const userData = JSON.parse(user);
-            if (userData.location) {
-                document.getElementById('userLocation').textContent = userData.location;
-                
-                // 지역 정보를 입력창에 자동 설정
-                const [province, district] = userData.location.split(' ');
-                if (province && district) {
-                    document.getElementById('province').value = province;
-                    document.getElementById('district').value = district;
-                }
-            }
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
 
-            // 글자수 카운트
-            document.getElementById('productTitle').addEventListener('input', function() {
-                document.getElementById('titleCount').textContent = `${this.value.length}/40`;
+                        // 압축: 최대 800px 해상도로 제한
+                        const max_size = 800;
+                        if (width > height) {
+                            if (width > max_size) {
+                                height *= max_size / width;
+                                width = max_size;
+                            }
+                        } else {
+                            if (height > max_size) {
+                                width *= max_size / height;
+                                height = max_size;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // JPEG 품질 0.7로 압축하여 용량 획기적 감소
+                        const compressedData = canvas.toDataURL('image/jpeg', 0.7);
+                        uploadedImages.push(compressedData);
+                        updatePreview();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             });
+            input.value = ""; // 동일 파일 재업로드 가능하게 초기화
+        }
 
-            document.getElementById('description').addEventListener('input', function() {
-                document.getElementById('descCount').textContent = `${this.value.length}/500`;
-            });
-
-            // 임시 저장된 데이터 불러오기
-            loadDraftData();
-        });
-
-        // 이미지 미리보기
-        function previewImage(event, type) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const previewId = type === 'main' ? 'mainImagePreview' : `subImagePreview${type.replace('sub', '')}`;
-                const previewElement = document.getElementById(previewId);
-                
-                previewElement.innerHTML = `
-                    <img src="${e.target.result}" class="w-full h-full object-cover rounded-xl">
-                    <button type="button" onclick="removeImage('${type}')" 
-                            class="absolute top-2 right-2 w-8 h-8 bg-black bg-opacity-50 text-white rounded-full">
+        // 미리보기 화면 업데이트
+        function updatePreview() {
+            const listElement = document.getElementById('imagePreviewList');
+            const countText = document.getElementById('imageCountText');
+            
+            listElement.innerHTML = "";
+            uploadedImages.forEach((imgSrc, index) => {
+                const item = document.createElement('div');
+                item.className = "preview-item";
+                item.innerHTML = `
+                    <img src="${imgSrc}">
+                    <button type="button" onclick="removeImage(${index})" class="delete-btn">
                         <i class="fas fa-times"></i>
                     </button>
                 `;
-                previewElement.classList.add('relative');
-            };
-            reader.readAsDataURL(file);
+                listElement.appendChild(item);
+            });
+            countText.innerText = `${uploadedImages.length}/8`;
         }
 
-        // 이미지 삭제
-        function removeImage(type) {
-            const previewId = type === 'main' ? 'mainImagePreview' : `subImagePreview${type.replace('sub', '')}`;
-            const inputId = type === 'main' ? 'mainImageInput' : `subImageInput${type.replace('sub', '')}`;
-            
-            document.getElementById(previewId).innerHTML = `
-                <i class="fas fa-${type === 'main' ? 'camera' : 'plus'} text-${type === 'main' ? '3' : '2'}xl text-gray-300 mb-2"></i>
-                <p class="text-gray-500 text-sm">${type === 'main' ? '대표사진' : '추가사진 ' + type.replace('sub', '')}</p>
-                <p class="text-gray-400 text-xs">${type === 'main' ? '클릭하여 업로드' : ''}</p>
-            `;
-            document.getElementById(previewId).classList.remove('relative');
-            document.getElementById(inputId).value = '';
+        function removeImage(index) {
+            uploadedImages.splice(index, 1);
+            updatePreview();
         }
 
-        // 가격 빠른 설정
-        function setPrice(amount) {
+        function togglePrice(checkbox) {
             const priceInput = document.getElementById('price');
-            priceInput.value = amount;
-            priceInput.dispatchEvent(new Event('input'));
-        }
-
-        // 태그 추가
-        const tags = [];
-        function addTagOnEnter(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                const tagInput = document.getElementById('tagInput');
-                const tag = tagInput.value.trim();
-                
-                if (tag && tags.length < 5 && !tags.includes(tag)) {
-                    tags.push(tag);
-                    updateTagDisplay();
-                    tagInput.value = '';
-                }
+            if (checkbox.checked) {
+                priceInput.value = 0;
+                priceInput.readOnly = true;
+                priceInput.classList.add('bg-gray-100');
+            } else {
+                priceInput.value = "";
+                priceInput.readOnly = false;
+                priceInput.classList.remove('bg-gray-100');
             }
         }
 
-        function updateTagDisplay() {
-            const container = document.getElementById('tagContainer');
-            container.innerHTML = '';
-            
-            tags.forEach((tag, index) => {
-                const tagElement = document.createElement('div');
-                tagElement.className = 'tag px-3 py-2 rounded-lg flex items-center';
-                tagElement.innerHTML = `
-                    ${tag}
-                    <button type="button" onclick="removeTag(${index})" class="ml-2 text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times text-sm"></i>
-                    </button>
-                `;
-                container.appendChild(tagElement);
-            });
-        }
-
-        function removeTag(index) {
-            tags.splice(index, 1);
-            updateTagDisplay();
-        }
-
-        // 임시 저장
-        function saveAsDraft() {
-            const formData = collectFormData();
-            localStorage.setItem('productDraft', JSON.stringify(formData));
-            showMessage('상품이 임시 저장되었습니다.', 'success');
-        }
-
-        function loadDraftData() {
-            const draft = localStorage.getItem('productDraft');
-            if (draft) {
-                const data = JSON.parse(draft);
-                
-                // 폼 데이터 복원
-                if (confirm('임시 저장된 상품이 있습니다. 불러오시겠습니까?')) {
-                    document.getElementById('productTitle').value = data.title || '';
-                    document.getElementById('price').value = data.price || '';
-                    document.getElementById('description').value = data.description || '';
-                    
-                    // 카테고리 복원
-                    if (data.category) {
-                        document.querySelector(`input[name="category"][value="${data.category}"]`).checked = true;
-                    }
-                    
-                    // 상태 복원
-                    if (data.condition) {
-                        document.querySelector(`input[name="condition"][value="${data.condition}"]`).checked = true;
-                    }
-                    
-                    // 거래 방식 복원
-                    if (data.transaction) {
-                        data.transaction.forEach(method => {
-                            const checkbox = document.querySelector(`input[name="transaction"][value="${method}"]`);
-                            if (checkbox) checkbox.checked = true;
-                        });
-                    }
-                    
-                    // 태그 복원
-                    if (data.tags) {
-                        tags.push(...data.tags);
-                        updateTagDisplay();
-                    }
-                    
-                    showMessage('임시 저장된 상품을 불러왔습니다.', 'success');
-                }
-            }
-        }
-
-        // 폼 데이터 수집
-        function collectFormData() {
-            const transactionMethods = [];
-            document.querySelectorAll('input[name="transaction"]:checked').forEach(cb => {
-                transactionMethods.push(cb.value);
-            });
-
-            return {
-                title: document.getElementById('productTitle').value,
-                category: document.querySelector('input[name="category"]:checked')?.value,
-                price: document.getElementById('price').value,
-                condition: document.querySelector('input[name="condition"]:checked')?.value,
-                description: document.getElementById('description').value,
-                transaction: transactionMethods,
-                location: document.getElementById('userLocation').textContent,
-                province: document.getElementById('province').value,
-                district: document.getElementById('district').value,
-                tags: [...tags],
-                timestamp: new Date().toISOString()
-            };
-        }
-
-        // 폼 제출 처리
+        // 폼 제출 핸들러
         document.getElementById('productForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            const formData = collectFormData();
-            
-            // 필수 항목 검사
-            if (!formData.title || !formData.category || !formData.price || !formData.condition || !formData.description) {
-                showMessage('모든 필수 항목을 입력해주세요.', 'error');
+
+            if (uploadedImages.length === 0) {
+                alert("최소 1장의 사진을 등록해주세요!");
                 return;
             }
 
-            if (formData.transaction.length === 0) {
-                showMessage('거래 방식을 선택해주세요.', 'error');
-                return;
-            }
-
-            if (!formData.province || !formData.district) {
-                showMessage('거래 지역을 선택해주세요.', 'error');
-                return;
-            }
-
-            // 상품 데이터 저장 (임시)
-            const userData = JSON.parse(localStorage.getItem('plantiaUser') || '{}');
             const productData = {
-                ...formData,
-                seller: userData.name || '익명',
-                sellerEmail: userData.email,
-                sellerLocation: userData.location,
-                id: Date.now().toString(),
-                createdDate: new Date().toLocaleDateString(),
-                status: '판매중',
-                views: 0,
-                likes: 0
+                id: Date.now(),
+                title: document.getElementById('title').value,
+                category: document.querySelector('input[name="category"]:checked').value,
+                price: parseInt(document.getElementById('price').value) || 0,
+                description: document.getElementById('description').value,
+                location: document.getElementById('location').value,
+                images: uploadedImages,
+                date: new Date().toLocaleDateString()
             };
 
-            // 기존 상품 목록 가져오기
-            let products = JSON.parse(localStorage.getItem('plantiaProducts') || '[]');
-            products.push(productData);
-            localStorage.setItem('plantiaProducts', JSON.stringify(products));
+            const savedData = JSON.parse(localStorage.getItem('plantiaProducts') || '[]');
+            savedData.push(productData);
             
-            // 임시 저장 데이터 삭제
-            localStorage.removeItem('productDraft');
-            
-            // 성공 메시지
-            showMessage('상품이 성공적으로 등록되었습니다!', 'success');
-            
-            // 2초 후 메인 페이지로 이동
-            setTimeout(() => {
-                window.location.href = '/';
-            }, 2000);
+            try {
+                localStorage.setItem('plantiaProducts', JSON.stringify(savedData));
+                alert('🌱 식물이 성공적으로 등록되었습니다!');
+                window.location.href = 'index.html';
+            } catch (err) {
+                // 압축 후에도 에러가 난다면 데이터가 너무 많다는 뜻
+                alert('저장 공간이 부족합니다. 이전 게시물을 삭제하거나 사진 수를 줄여주세요.');
+                console.error(err);
+            }
         });
-
-        // 메시지 표시 함수
-        function showMessage(message, type) {
-            const existingMsg = document.getElementById('messageBox');
-            if (existingMsg) existingMsg.remove();
-            
-            const messageBox = document.createElement('div');
-            messageBox.id = 'messageBox';
-            
-            const colors = {
-                success: 'bg-green-100 border-green-500 text-green-700',
-                error: 'bg-red-100 border-red-500 text-red-700',
-                info: 'bg-blue-100 border-blue-500 text-blue-700'
-            };
-            
-            messageBox.className = `fixed top-4 left-1/2 transform -translate-x-1/2 p-4 rounded-xl border-2 shadow-lg z-50 ${colors[type]}`;
-            messageBox.innerHTML = `
-                <div class="flex items-center">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-3 text-lg"></i>
-                    <span class="font-medium">${message}</span>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-            
-            document.body.appendChild(messageBox);
-            
-            setTimeout(() => {
-                if (messageBox.parentElement) {
-                    messageBox.remove();
-                }
-            }, 5000);
-        }
-
-        // CSS 스타일 추가
-        const style = document.createElement('style');
-        style.textContent = `
-            .price-tag {
-                transition: all 0.2s ease;
-            }
-            .price-tag:hover {
-                background-color: #2e8b57;
-                color: white;
-                border-color: #2e8b57;
-            }
-            .checkbox-custom:checked {
-                background-color: #2e8b57;
-                border-color: #2e8b57;
-            }
-        `;
-        document.head.appendChild(style);
     </script>
 </body>
 </html>
