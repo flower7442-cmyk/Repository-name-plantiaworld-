@@ -119,11 +119,7 @@
                 </div>
             </div>
             <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                <div class="col-span-full py-20 flex flex-col items-center justify-center">
-                    <div class="loading-spinner mb-4"></div>
-                    <p class="text-gray-500 animate-pulse">우리 동네 식물들을 불러오고 있어요...</p>
                 </div>
-            </div>
         </section>
 
         <section id="localProductsSection" class="mb-10 hidden bg-white rounded-3xl p-8 shadow-sm">
@@ -162,63 +158,47 @@
         </div>
     </footer>
 
-    <div id="productModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="handleOutsideClick(event)">
-        <div class="bg-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto relative" onclick="event.stopPropagation()">
-            <button onclick="closeModal()" class="absolute top-4 right-4 z-10 bg-white/80 rounded-full w-10 h-10 flex items-center justify-center shadow-md hover:bg-white transition-colors">
-                <i class="fas fa-times text-gray-800"></i>
-            </button>
-            <div id="modalContent"></div>
-        </div>
-    </div>
-
     <script>
         let allProducts = [];
         let currentFilter = 'all';
         let currentSort = 'recent';
 
         document.addEventListener('DOMContentLoaded', () => {
-            initializeData();
-            setupEventListeners();
-        });
-
-        function initializeData() {
-            createSampleData();
             loadProducts();
             checkLoginStatus();
-            setTimeout(() => {
-                displayProducts();
-                displayLocalProducts();
-            }, 800);
-        }
-
-        function createSampleData() {
-            if (!localStorage.getItem('plantiaProducts')) {
-                const samples = [
-                    { id: 1, title: "몬스테라 아단소니", price: 12000, category: "관엽식물", status: "판매중", sellerLocation: "서울 강남구", likes: 12, createdDate: "2024-01-20", description: "잎이 아주 건강해요!" },
-                    { id: 2, title: "다육이 염좌", price: 25000, category: "다육이", status: "판매중", sellerLocation: "경기 성남시", likes: 5, createdDate: "2024-01-22", description: "대형 화분 포함입니다." },
-                    { id: 3, title: "독일 토분 15호", price: 8000, category: "화분/흙", status: "판매중", sellerLocation: "서울 마포구", likes: 21, createdDate: "2024-01-25", description: "미사용 새제품이에요." },
-                    { id: 4, title: "스킨답서스 나눔", price: 0, category: "관엽식물", status: "판매중", sellerLocation: "서울 서초구", likes: 45, createdDate: "2024-01-27", description: "뿌리 잘 내렸어요." },
-                    { id: 5, title: "식물 관리 노하우", price: 0, category: "정보공유", status: "정보", sellerLocation: "부산 해운대구", likes: 89, createdDate: "2024-01-15", description: "겨울철 관리법 공유합니다." }
-                ];
-                localStorage.setItem('plantiaProducts', JSON.stringify(samples));
-            }
-        }
+            displayProducts();
+            displayLocalProducts();
+        });
 
         function loadProducts() {
+            // 로컬스토리지에서 상품 가져오기
             const data = localStorage.getItem('plantiaProducts');
             allProducts = data ? JSON.parse(data) : [];
+            
+            // 데이터가 아예 없으면 샘플 생성
+            if (allProducts.length === 0) {
+                allProducts = [
+                    { id: 1, title: "몬스테라 아단소니", price: 12000, category: "관엽식물", status: "판매중", sellerLocation: "부산 해운대구", likes: 12, createdDate: "2024-01-20", description: "잎이 아주 건강해요!", images: [] },
+                    { id: 2, title: "다육이 염좌", price: 25000, category: "다육식물", status: "판매중", sellerLocation: "서울 강남구", likes: 5, createdDate: "2024-01-22", description: "대형 화분 포함입니다.", images: [] }
+                ];
+                localStorage.setItem('plantiaProducts', JSON.stringify(allProducts));
+            }
         }
 
         function displayProducts() {
             const container = document.getElementById('productGrid');
             if (!container) return;
+
             let filtered = currentFilter === 'all' ? [...allProducts] : allProducts.filter(p => p.category === currentFilter);
+            
             if (currentSort === 'price') filtered.sort((a, b) => a.price - b.price);
             else filtered.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+
             document.getElementById('sectionTitle').textContent = currentFilter === 'all' ? '최신 식물' : currentFilter;
             
             let html = filtered.map(p => createCardHtml(p)).join('');
-            html += `<div onclick="location.href='add-product.html'" class="product-card border-2 border-dashed border-green-200 rounded-2xl flex flex-col items-center justify-center p-6 text-green-600 hover:bg-green-50 min-h-[280px]">
+            // 등록 카드 추가
+            html += `<div onclick="location.href='add-product.html'" class="product-card border-2 border-dashed border-green-200 rounded-2xl flex flex-col items-center justify-center p-6 text-green-600 hover:bg-green-50 min-h-[200px]">
                         <i class="fas fa-plus-circle text-3xl mb-2"></i><span class="font-medium">나도 등록하기</span>
                     </div>`;
             container.innerHTML = html;
@@ -226,11 +206,13 @@
 
         function createCardHtml(p) {
             const isFree = p.price === 0;
-            const imgUrl = `https://loremflickr.com/400/400/plant,pot?lock=${p.id}`;
+            // 이미지가 있으면 첫 번째 이미지, 없으면 샘플 이미지 사용
+            const thumbnail = (p.images && p.images.length > 0) ? p.images[0] : `https://loremflickr.com/400/400/plant,pot?lock=${p.id}`;
+            
             return `
-                <div class="product-card bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col" onclick="viewProduct(${p.id})">
+                <div class="product-card bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col" onclick="location.href='product-detail.html?id=${p.id}'">
                     <div class="product-image-container">
-                        <img src="${imgUrl}" class="product-image" alt="식물" loading="lazy">
+                        <img src="${thumbnail}" class="product-image" alt="식물" loading="lazy">
                         ${isFree ? '<div class="sold-out-badge bg-green-600">무료나눔</div>' : ''}
                     </div>
                     <div class="p-4 flex flex-col flex-grow">
@@ -238,10 +220,9 @@
                         <div class="mt-auto">
                             <p class="price-tag text-base mb-2">${isFree ? '나눔 🌱' : p.price.toLocaleString() + '원'}</p>
                             <div class="flex items-center justify-between text-[11px] text-gray-400 border-t pt-2">
-                                <span>${p.sellerLocation}</span>
+                                <span>${p.sellerLocation || p.location || '지역 정보 없음'}</span>
                                 <div class="flex items-center space-x-2">
-                                    <span><i class="far fa-heart mr-0.5"></i>${p.likes}</span>
-                                    <span>${formatDate(p.createdDate)}</span>
+                                    <span><i class="far fa-heart mr-0.5"></i>${p.likes || 0}</span>
                                 </div>
                             </div>
                         </div>
@@ -249,62 +230,6 @@
                 </div>`;
         }
 
-        function viewProduct(id) {
-            const p = allProducts.find(x => x.id === id);
-            if (!p) return;
-            const modal = document.getElementById('productModal');
-            const content = document.getElementById('modalContent');
-            const isFree = p.price === 0;
-            const imgUrl = `https://loremflickr.com/600/600/plant,pot?lock=${p.id}`;
-
-            content.innerHTML = `
-                <div class="flex flex-col md:flex-row">
-                    <div class="md:w-1/2 h-80 md:h-auto overflow-hidden">
-                        <img src="${imgUrl}" class="w-full h-full object-cover" alt="${p.title}">
-                    </div>
-                    <div class="md:w-1/2 p-6 md:p-8 flex flex-col">
-                        <div class="flex items-center space-x-2 mb-2">
-                            <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">${p.category}</span>
-                            <span class="text-xs text-gray-400">${p.status}</span>
-                        </div>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">${p.title}</h2>
-                        <div class="flex items-center space-x-3 mb-6">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center"><i class="fas fa-user text-gray-400"></i></div>
-                            <div>
-                                <p class="text-sm font-bold text-gray-800">${p.seller || '익명의 집사'}</p>
-                                <p class="text-[11px] text-gray-400">${p.sellerLocation}</p>
-                            </div>
-                        </div>
-                        <div class="flex-grow"><p class="text-gray-600 leading-relaxed text-sm whitespace-pre-line mb-6">${p.description || "건강하게 잘 키운 식물입니다!"}</p></div>
-                        <div class="mt-4 pt-6 border-t flex items-center justify-between">
-                            <div><p class="text-xs text-gray-400">희망가</p><p class="text-2xl font-black text-green-700">${isFree ? '무료나눔 🌱' : p.price.toLocaleString() + '원'}</p></div>
-                            <button onclick="startChat('${p.seller || '판매자'}')" class="bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 shadow-lg">채팅하기</button>
-                        </div>
-                    </div>
-                </div>`;
-            modal.classList.replace('hidden', 'flex');
-            document.body.style.overflow = 'hidden'; 
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('productModal');
-            modal.classList.replace('flex', 'hidden');
-            document.body.style.overflow = 'auto';
-        }
-
-        function handleOutsideClick(e) { if(e.target.id === 'productModal') closeModal(); }
-        function startChat(seller) { alert(`${seller}님과 채팅을 시작합니다. (준비 중인 기능입니다)`); }
-        function formatDate(d) {
-            const diff = Math.floor((new Date() - new Date(d)) / (1000 * 60 * 60 * 24));
-            return diff === 0 ? '오늘' : diff < 7 ? `${diff}일 전` : d;
-        }
-        function filterProducts(cat) { currentFilter = cat; displayProducts(); }
-        function sortProducts(type) {
-            currentSort = type;
-            document.getElementById('sortRecentBtn').className = type === 'recent' ? 'text-green-600' : 'text-gray-400 hover:text-green-600';
-            document.getElementById('sortPriceBtn').className = type === 'price' ? 'text-green-600' : 'text-gray-400 hover:text-green-600';
-            displayProducts();
-        }
         function checkLoginStatus() {
             const user = JSON.parse(localStorage.getItem('plantiaUser') || 'null');
             const authDiv = document.getElementById('authButtons');
@@ -315,20 +240,28 @@
                 authDiv.innerHTML = `<button onclick="location.href='login.html'" class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200"><i class="fas fa-user"></i></button>`;
             }
         }
+
         function displayLocalProducts() {
             const user = JSON.parse(localStorage.getItem('plantiaUser') || 'null');
             if (!user || !user.location) return;
             const grid = document.getElementById('localProductGrid');
-            const localItems = allProducts.filter(p => p.sellerLocation.includes(user.location.split(' ')[0])).slice(0, 6);
+            const localItems = allProducts.filter(p => (p.sellerLocation || p.location || '').includes(user.location.split(' ')[0])).slice(0, 6);
             if (localItems.length > 0) {
                 grid.innerHTML = localItems.map(p => createCardHtml(p)).join('');
                 document.getElementById('localSectionTitle').textContent = `${user.location} 인기 식물`;
             }
         }
+
+        function filterProducts(cat) { currentFilter = cat; displayProducts(); }
+        function sortProducts(type) {
+            currentSort = type;
+            document.getElementById('sortRecentBtn').className = type === 'recent' ? 'text-green-600' : 'text-gray-400 hover:text-green-600';
+            document.getElementById('sortPriceBtn').className = type === 'price' ? 'text-green-600' : 'text-gray-400 hover:text-green-600';
+            displayProducts();
+        }
         function showFavorites() { alert('관심 상품 목록입니다.'); }
         function showUserMenu() { if(confirm('로그아웃 하시겠습니까?')) { localStorage.removeItem('plantiaUser'); location.reload(); } }
         function refreshLocalProducts() { location.reload(); }
-        function setupEventListeners() { window.addEventListener('storage', () => { loadProducts(); displayProducts(); }); }
     </script>
 </body>
 </html>
