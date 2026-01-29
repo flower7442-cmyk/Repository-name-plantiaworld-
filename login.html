@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로그인 - PlantiaWorld</title>
+    <title>로그인 및 회원가입 - PlantiaWorld</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
@@ -18,87 +20,132 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
+        #map { height: 200px; border-radius: 12px; margin-top: 8px; border: 1px solid #ddd; z-index: 10; }
     </style>
 </head>
-<body class="plant-bg min-h-screen flex items-center justify-center p-4">
+<body class="plant-bg min-h-screen flex items-center justify-center p-4 py-12">
 
-    <div class="glass-card p-8 rounded-2xl shadow-2xl max-w-md w-full my-8">
-        <div class="text-center mb-8">
+    <div class="glass-card p-8 rounded-3xl shadow-2xl max-w-lg w-full">
+        <div class="text-center mb-6">
             <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <i class="fas fa-leaf text-white text-2xl"></i>
             </div>
             <h1 class="text-2xl font-bold text-gray-800">PlantiaWorld</h1>
-            <p class="text-gray-500 mt-2">비밀번호로 안전하게 시작하세요</p>
+            <p class="text-sm text-gray-500 mt-1">지도로 동네를 설정하고 식물 친구를 만나보세요</p>
         </div>
 
-        <form id="loginForm" class="space-y-4">
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">닉네임</label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-user"></i></span>
-                    <input type="text" id="username" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none" placeholder="이름을 입력하세요" required>
+        <form id="signupForm" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">성함</label>
+                    <input type="text" id="realName" class="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="본명" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">닉네임</label>
+                    <input type="text" id="username" class="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="닉네임" required>
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">비밀번호</label>
+                <label class="block text-xs font-bold text-gray-600 mb-1">비밀번호 설정</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-lock"></i></span>
-                    <input type="password" id="password" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none" placeholder="비밀번호 (6자 이상)" required>
+                    <input type="password" id="password" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="6자 이상 입력" required>
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">활동 지역</label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"><i class="fas fa-map-marker-alt"></i></span>
-                    <select id="userLocation" class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none appearance-none bg-white" required>
-                        <option value="">지역을 선택해 주세요</option>
-                        <optgroup label="서울특별시"><option value="서울 강남/서초/송파">서울 강남/서초/송파</option><option value="서울 마포/용산/성동">서울 마포/용산/성동</option><option value="서울 영등포/구로/강서">서울 영등포/구로/강서</option><option value="서울 노원/도봉/강북">서울 노원/도봉/강북</option><option value="서울 기타">서울 기타 지역</option></optgroup>
-                        <optgroup label="광역시"><option value="부산광역시">부산광역시 전체</option><option value="인천광역시">인천광역시 전체</option><option value="대구광역시">대구광역시 전체</option><option value="대전광역시">대전광역시 전체</option><option value="광주광역시">광주광역시 전체</option><option value="울산광역시">울산광역시 전체</option><option value="세종특별자치시">세종특별자치시</option></optgroup>
-                        <optgroup label="경기도"><option value="경기 수원/용인/성남">경기 수원/용인/성남</option><option value="경기 고양/일산/파주">경기 고양/일산/파주</option><option value="경기 부천/광명/안양">경기 부천/광명/안양</option><option value="경기 평택/화성/안성">경기 평택/화성/안성</option><option value="경기 남양주/구리/하남">경기 남양주/구리/하남</option></optgroup>
-                        <optgroup label="강원/충청/전라/경상/제주"><option value="강원특별자치도">강원특별자치도</option><option value="충청권">충청도 전체</option><option value="전라권">전라도 전체</option><option value="경상권">경상도 전체</option><option value="제주특별자치도">제주특별자치도</option></optgroup>
-                    </select>
+                <label class="block text-xs font-bold text-gray-600 mb-1">활동 지역 설정 (지도를 클릭하세요)</label>
+                <div id="map"></div>
+                <div class="mt-3 p-3 bg-green-50 rounded-xl flex items-center gap-2">
+                    <i class="fas fa-map-marker-alt text-green-600"></i>
+                    <p id="locationStatus" class="text-sm text-green-800 font-medium">지도를 클릭해 주세요</p>
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition active:scale-95">시작하기</button>
+            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95 mt-4">
+                가입 완료 및 시작하기
+            </button>
         </form>
 
-        <div class="mt-6 text-center text-xs text-gray-400">
-            로그인 시 이용약관 및 개인정보 처리방침에 동의하게 됩니다.
+        <div class="mt-6 text-center">
+            <p class="text-xs text-gray-400 font-medium">이미 계정이 있으신가요? <a href="#" class="text-green-600 underline">로그인</a></p>
         </div>
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        // 1. 지도 초기화 (기본 위치: 서울시청)
+        let userLocation = { lat: 37.5665, lng: 126.9780, name: "서울특별시" };
+        const map = L.map('map').setView([userLocation.lat, userLocation.lng], 12);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        let marker = L.marker([userLocation.lat, userLocation.lng]).addTo(map);
+
+        // 2. 지도 클릭 이벤트: 주소 추출
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            
+            if (marker) map.removeLayer(marker);
+            marker = L.marker([lat, lng]).addTo(map);
+
+            // 무료 주소 변환 API 사용 (Nominatim)
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
+                .then(res => res.json())
+                .then(data => {
+                    const addr = data.address;
+                    // 전국 어디서든 시/도 및 구/군 단위 추출
+                    const region = addr.city || addr.province || addr.city_district || addr.state || "";
+                    const district = addr.borough || addr.suburb || addr.district || addr.county || "";
+                    
+                    userLocation.name = `${region} ${district}`.trim() || "대한민국 어딘가";
+                    userLocation.lat = lat;
+                    userLocation.lng = lng;
+                    
+                    document.getElementById('locationStatus').innerText = `현재 위치: ${userLocation.name}`;
+                })
+                .catch(() => {
+                    document.getElementById('locationStatus').innerText = "위치를 찾을 수 없습니다. 다시 시도해 주세요.";
+                });
+        });
+
+        // 3. 폼 제출 처리
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const name = document.getElementById('username').value.trim();
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            const locationStr = document.getElementById('userLocation').value;
 
-            // 비밀번호 유효성 검사 (최소 6자)
             if (password.length < 6) {
-                alert('비밀번호는 최소 6자 이상이어야 합니다! 🔒');
+                alert('비밀번호를 6자 이상 입력해주세요! 🔒');
                 return;
             }
 
+            if (userLocation.name === "서울특별시" && !marker) {
+                alert('지도를 클릭하여 정확한 동네를 선택해 주세요! 📍');
+                return;
+            }
+
+            // index.html 호환용 데이터 저장
             const userData = {
-                name: name,
-                location: locationStr,
-                // 보안상 실제 서비스에선 비밀번호를 이렇게 저장하면 안 되지만, 
-                // 현재 로컬스토리지 방식에 맞춰 기능을 추가했습니다.
+                name: username,
+                location: userLocation.name, // 메인 페이지에서 이 텍스트로 필터링함
+                lat: userLocation.lat,
+                lng: userLocation.lng,
                 isLoggedIn: true,
                 loginTime: new Date().getTime()
             };
 
             localStorage.setItem('plantiaUser', JSON.stringify(userData));
 
-            alert(`보안 로그인 성공!\n${name}님, ${locationStr} 이웃들과 즐거운 식물 쇼핑 되세요! 🌱`);
+            alert(`🌿 환영합니다, ${username}님!\n가입하신 지역은 [${userLocation.name}] 입니다.`);
             window.location.href = 'index.html';
         });
 
+        // 4. 이미 로그인된 유저 체크
         window.onload = function() {
             if (localStorage.getItem('plantiaUser')) {
                 window.location.href = 'index.html';
