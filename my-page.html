@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 - PlantiaWorld</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, #f8fafc 0%, #f0fdf4 100%);
+            color: #334155; 
+        }
+        
+        /* Smooth transitions */
+        * {
+            transition: all 0.25s ease;
+        }
+
+        /* Modern card styling */
+        .modern-card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(229, 231, 235, 0.6);
+            overflow: hidden;
+        }
+
+        /* Minimal navigation */
+        .nav-tab {
+            position: relative;
+            cursor: pointer;
+            color: #64748b;
+            padding: 1rem 0;
+            font-weight: 500;
+        }
+        .nav-tab.active {
+            color: #16a34a;
+            font-weight: 700;
+        }
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            width: 40px;
+            height: 3px;
+            background-color: #16a34a;
+            border-radius: 10px;
+        }
+
+        /* Elegant hover effects */
+        .hover-lift:hover {
+            transform: translateY(-2px);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b border-gray-100">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+                    <i class="fas fa-leaf text-white text-sm"></i>
+                </div>
+                <span class="font-bold text-lg text-gray-800">Plantia</span>
+            </a>
+            
+            <div class="flex items-center space-x-3">
+                <a href="add-product.html" class="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-semibold rounded-full hover:shadow-md">
+                    <i class="fas fa-plus mr-1"></i>식물 등록
+                </a>
+                <div class="flex items-center space-x-2 cursor-pointer">
+                    <div class="w-8 h-8 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-emerald-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto">
+            
+            <!-- Left Profile Column -->
+            <div class="lg:w-1/3 space-y-5">
+                <!-- Profile Card -->
+                <div class="modern-card p-6 text-center">
+                    <div class="relative w-28 h-28 mx-auto mb-4">
+                        <div class="w-full h-full rounded-full overflow-hidden ring-4 ring-white shadow-lg">
+                            <img id="profileImage" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400" alt="Profile" class="w-full h-full object-cover">
+                        </div>
+                        <label for="avatarInput" class="absolute bottom-1 right-1 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center cursor-pointer shadow-md hover:bg-emerald-600">
+                            <i class="fas fa-camera text-white text-xs"></i>
+                        </label>
+                        <input type="file" id="avatarInput" class="hidden" accept="image/*">
+                    </div>
+                    
+                    <h2 class="text-xl font-bold text-gray-800 mb-1" id="userNameDisplay">홍길동</h2>
+                    <p class="text-emerald-600 font-medium mb-3" id="userNicknameDisplay">@식물사랑꾼</p>
+                    
+                    <div class="flex justify-center gap-2 mb-5">
+                        <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full">🌱 초보 집사</span>
+                        <span id="userLocationDisplay" class="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">📍 서울</span>
+                    </div>
+
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div class="flex justify-between">
+                            <span>이메일</span>
+                            <span class="font-medium" id="userEmailDisplay">plantlover@example.com</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>평점</span>
+                            <span class="text-amber-500 font-semibold">★ 4.8</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Card -->
+                <div class="modern-card p-5">
+                    <h3 class="font-bold text-gray-800 mb-4">활동 요약</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                <span>등록한 식물</span>
+                                <span class="font-semibold">8 / 10</span>
+                            </div>
+                            <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-400 to-green-400 rounded-full" style="width: 80%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                <span>거래 완료</span>
+                                <span class="font-semibold">12건</span>
+                            </div>
+                            <div class="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full" style="width: 60%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="modern-card p-5">
+                    <h3 class="font-bold text-gray-800 mb-3">빠른 메뉴</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <a href="#" class="p-3 bg-gray-50 rounded-xl hover:bg-emerald-50 text-center group">
+                            <i class="fas fa-heart text-rose-400 mb-1"></i>
+                            <div class="text-xs font-medium">찜한 목록</div>
+                        </a>
+                        <a href="#" class="p-3 bg-gray-50 rounded-xl hover:bg-emerald-50 text-center group">
+                            <i class="fas fa-exchange-alt text-blue-400 mb-1"></i>
+                            <div class="text-xs font-medium">거래 내역</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Content Column -->
+            <div class="lg:w-2/3">
+                <!-- Navigation Tabs -->
+                <div class="modern-card p-1 mb-6 flex">
+                    <button onclick="switchTab('myPlants')" id="tab-myPlants" class="nav-tab active flex-1 text-sm">내 식물</button>
+                    <button onclick="switchTab('trading')" id="tab-trading" class="nav-tab flex-1 text-sm">거래</button>
+                    <button onclick="switchTab('community')" id="tab-community" class="nav-tab flex-1 text-sm">게시글</button>
+                    <button onclick="switchTab('settings')" id="tab-settings" class="nav-tab flex-1 text-sm">설정</button>
+                </div>
+
+                <!-- Tab Contents -->
+                <div id="content-myPlants" class="tab-content fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Add New Plant -->
+                        <a href="add-product.html" class="modern-card border-2 border-dashed border-gray-200 hover:border-emerald-300 p-6 flex flex-col items-center justify-center text-center hover-lift">
+                            <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                                <i class="fas fa-plus text-gray-400"></i>
+                            </div>
+                            <span class="font-medium text-gray-600">새 식물 등록</span>
+                        </a>
+
+                        <!-- Plant Card -->
+                        <div class="modern-card overflow-hidden hover-lift">
+                            <div class="relative h-40">
+                                <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=500" class="w-full h-full object-cover">
+                                <span class="absolute top-3 left-3 bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded">판매중</span>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-bold text-gray-800">몬스테라 델리시오사</h4>
+                                    <div class="flex space-x-2">
+                                        <button class="text-gray-400 hover:text-emerald-500"><i class="fas fa-edit text-sm"></i></button>
+                                        <button onclick="deleteItem(this)" class="text-gray-400 hover:text-rose-500"><i class="fas fa-trash text-sm"></i></button>
+                                    </div>
+                                </div>
+                                <p class="text-emerald-600 font-bold text-lg mb-2">25,000원</p>
+                                <div class="flex justify-between text-xs text-gray-400">
+                                    <span><i class="far fa-eye mr-1"></i> 124</span>
+                                    <span><i class="far fa-heart mr-1"></i> 18</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trading Tab -->
+                <div id="content-trading" class="tab-content hidden fade-in">
+                    <div class="mb-4">
+                        <button class="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium mr-2">구매 내역</button>
+                        <button class="px-4 py-2 bg-white text-gray-500 rounded-lg text-sm font-medium border">판매 내역</button>
+                    </div>
+                    <div class="modern-card p-4 flex items-center hover:bg-gray-50/50">
+                        <img src="https://images.unsplash.com/photo-1561212024-cb9ad0c2d61e?w-100" class="w-12 h-12 rounded-lg object-cover border">
+                        <div class="ml-4 flex-1">
+                            <div class="flex justify-between">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">몬스테라 묘목</h4>
+                                    <p class="text-xs text-gray-400">2024.01.20</p>
+                                </div>
+                                <span class="text-sm font-medium text-emerald-600">완료</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Community Tab -->
+                <div id="content-community" class="tab-content hidden fade-in space-y-3">
+                    <div class="modern-card p-4">
+                        <h4 class="font-medium text-gray-800 mb-2">몬스테라 잎이 누렇게 변해요</h4>
+                        <p class="text-sm text-gray-500 mb-3 line-clamp-2">해결 방법이 있을까요? 물은 일주일에 한 번 주고 있습니다...</p>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span>2일 전</span>
+                            <div class="flex space-x-3">
+                                <span><i class="far fa-comment mr-1"></i> 12</span>
+                                <span><i class="far fa-heart mr-1"></i> 24</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="content-settings" class="tab-content hidden fade-in">
+                    <div class="modern-card divide-y divide-gray-100">
+                        <div onclick="openEditModal()" class="p-4 flex justify-between items-center hover:bg-gray-50 cursor-pointer">
+                            <div>
+                                <h4 class="font-medium text-gray-800">프로필 수정</h4>
+                                <p class="text-xs text-gray-400">닉네임, 지역 정보 변경</p>
+                            </div>
+                            <i class="fas fa-chevron-right text-gray-300"></i>
+                        </div>
+                        <div class="p-4 flex justify-between items-center hover:bg-gray-50 cursor-pointer">
+                            <div>
+                                <h4 class="font-medium text-gray-800">알림 설정</h4>
+                                <p class="text-xs text-gray-400">거래 및 채팅 알림</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-emerald-500 transition"></div>
+                                <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                            </label>
+                        </div>
+                        <div onclick="logout()" class="p-4 flex justify-between items-center hover:bg-rose-50 cursor-pointer">
+                            <span class="font-medium text-rose-500">로그아웃</span>
+                            <i class="fas fa-sign-out-alt text-rose-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Modal -->
+    <div id="editProfileModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-gray-800">프로필 편집</h3>
+                <button onclick="closeEditModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+                    <i class="fas fa-times text-gray-400"></i>
+                </button>
+            </div>
+            
+            <form id="profileForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">이름</label>
+                    <input type="text" id="inputRealName" class="w-full px-4 py-3 bg-gray-50 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">닉네임</label>
+                    <input type="text" id="inputUsername" class="w-full px-4 py-3 bg-gray-50 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">지역</label>
+                    <select id="inputLocation" class="w-full px-4 py-3 bg-gray-50 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option value="서울 강남구">서울 강남구</option>
+                        <option value="서울 서초구">서울 서초구</option>
+                        <option value="경기 성남시">경기 성남시</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full py-3 bg-emerald-500 text-white rounded-lg font-bold hover:bg-emerald-600 mt-2">
+                    저장하기
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 1. 초기 데이터 로딩
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedData = JSON.parse(localStorage.getItem('plantiaUser')) || {
+                realName: '홍길동',
+                username: '식물사랑꾼',
+                email: 'plantlover@example.com',
+                location: '서울 강남구'
+            };
+            updateUI(savedData);
+        });
+
+        function updateUI(data) {
+            document.getElementById('userNameDisplay').textContent = data.realName;
+            document.getElementById('userNicknameDisplay').textContent = `@${data.username}`;
+            document.getElementById('userEmailDisplay').textContent = data.email;
+            document.getElementById('userLocationDisplay').textContent = `📍 ${data.location}`;
+        }
+
+        // 2. 탭 전환
+        function switchTab(tabId) {
+            document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+            
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            const content = document.getElementById(`content-${tabId}`);
+            content.classList.remove('hidden');
+            content.classList.add('fade-in');
+        }
+
+        // 3. 모달 제어
+        function openEditModal() {
+            const data = JSON.parse(localStorage.getItem('plantiaUser')) || {};
+            document.getElementById('inputRealName').value = data.realName || '';
+            document.getElementById('inputUsername').value = data.username || '';
+            document.getElementById('inputLocation').value = data.location || '서울 강남구';
+            document.getElementById('editProfileModal').classList.remove('hidden');
+            document.getElementById('editProfileModal').classList.add('flex');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editProfileModal').classList.add('hidden');
+            document.getElementById('editProfileModal').classList.remove('flex');
+        }
+
+        // 4. 프로필 저장
+        document.getElementById('profileForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newData = {
+                realName: document.getElementById('inputRealName').value,
+                username: document.getElementById('inputUsername').value,
+                location: document.getElementById('inputLocation').value,
+                email: 'plantlover@example.com'
+            };
+            localStorage.setItem('plantiaUser', JSON.stringify(newData));
+            updateUI(newData);
+            closeEditModal();
+        });
+
+        // 5. 기능 함수
+        function deleteItem(btn) {
+            if(confirm('이 식물을 삭제할까요?')) {
+                const card = btn.closest('.modern-card');
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => card.remove(), 200);
+            }
+        }
+
+        function logout() {
+            if(confirm('로그아웃 하시겠습니까?')) {
+                localStorage.removeItem('plantiaUser');
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>
