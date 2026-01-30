@@ -6,6 +6,12 @@
     <title>PlantiaWorld - 이웃과 식물을 나누는 공간</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDK CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
@@ -34,6 +40,7 @@
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .sold-out-badge {
@@ -50,10 +57,46 @@
             transition: transform 0.5s ease;
         }
         .product-card:hover .product-image { transform: scale(1.05); }
+        
+        /* 실시간 업데이트 알림 */
+        .live-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #22c55e;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 24px;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+        
+        .live-badge.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .hidden { display: none; }
     </style>
 </head>
 <body class="plant-gradient min-h-screen">
 
+    <!-- 실시간 업데이트 알림 -->
+    <div id="liveUpdateBadge" class="live-badge">
+        <i class="fas fa-sync-alt fa-spin"></i>
+        <span>새 상품이 등록되었습니다!</span>
+        <button onclick="refreshProducts()" class="ml-2 text-xs bg-white text-green-600 px-2 py-1 rounded hover:bg-gray-100">
+            새로고침
+        </button>
+    </div>
+
+    <!-- 헤더 -->
     <header class="bg-white shadow-sm sticky top-0 z-50">
         <div class="container mx-auto px-4 py-3 flex items-center justify-between">
             <a href="index.html" class="flex items-center space-x-2">
@@ -79,7 +122,9 @@
         </div>
     </header>
 
+    <!-- 메인 콘텐츠 -->
     <main class="container mx-auto px-4 py-8">
+        <!-- 카테고리 섹션 -->
         <section class="mb-12">
             <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
                 <span class="w-1 h-6 bg-green-500 rounded-full mr-2"></span>카테고리별 둘러보기
@@ -112,18 +157,41 @@
             </div>
         </section>
 
+        <!-- 상품 리스트 섹션 -->
         <section class="mb-10">
             <div class="flex justify-between items-end mb-6 border-b pb-4">
                 <h2 class="text-2xl font-bold text-gray-800" id="sectionTitle">최신 식물</h2>
-                <div class="flex space-x-4 text-sm font-medium">
-                    <button id="sortRecentBtn" class="text-green-600" onclick="sortProducts('recent')">최신순</button>
-                    <button id="sortPriceBtn" class="text-gray-400 hover:text-green-600" onclick="sortProducts('price')">가격순</button>
+                <div class="flex items-center space-x-2">
+                    <span id="productCount" class="text-sm text-gray-500">0개 상품</span>
+                    <div class="flex space-x-4 text-sm font-medium">
+                        <button id="sortRecentBtn" class="text-green-600" onclick="sortProducts('recent')">최신순</button>
+                        <button id="sortPriceBtn" class="text-gray-400 hover:text-green-600" onclick="sortProducts('price')">가격순</button>
+                    </div>
                 </div>
             </div>
-            <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                </div>
+            
+            <!-- 로딩 인디케이터 -->
+            <div id="loadingIndicator" class="text-center py-8">
+                <div class="loading-spinner"></div>
+                <p class="mt-4 text-gray-500">상품을 불러오는 중...</p>
+            </div>
+            
+            <!-- 상품 그리드 -->
+            <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 hidden">
+                <!-- 상품 카드들이 여기에 동적으로 생성됩니다 -->
+            </div>
+            
+            <!-- 빈 상태 표시 -->
+            <div id="emptyState" class="text-center py-12 hidden">
+                <i class="fas fa-seedling text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 mb-4">등록된 상품이 없습니다.</p>
+                <button onclick="location.href='add-product.html'" class="btn-primary text-white px-4 py-2 rounded-full">
+                    첫 상품 등록하기
+                </button>
+            </div>
         </section>
 
+        <!-- 지역 상품 섹션 -->
         <section id="localProductsSection" class="mb-10 hidden bg-white rounded-3xl p-8 shadow-sm">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-gray-800">
@@ -138,6 +206,7 @@
         </section>
     </main>
 
+    <!-- 푸터 -->
     <footer class="bg-gray-900 text-white py-12 mt-20">
         <div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
             <div>
@@ -161,114 +230,339 @@
     </footer>
 
     <script>
-        let allProducts = [];
-        let currentFilter = 'all';
-        let currentSort = 'recent';
+        // ========== Firebase 초기화 ==========
+        const firebaseConfig = {
+            apiKey: "AIzaSyA8W_2h3oI9S21-hoXKYBKs7rbdo86n6dc",
+            authDomain: "plantiaworld.firebaseapp.com",
+            projectId: "plantiaworld",
+            storageBucket: "plantiaworld.firebasestorage.app",
+            messagingSenderId: "18112813073",
+            appId: "1:18112813073:web:7247046c038a3831db79b",
+            measurementId: "G-8XSZM279KY"
+        };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadProducts();
-            checkLoginStatus(); // 로그인 상태 확인
-            displayProducts();
-            displayLocalProducts();
-        });
-
-        function loadProducts() {
-            // 로컬스토리지에서 상품 가져오기
-            const data = localStorage.getItem('plantiaProducts');
-            allProducts = data ? JSON.parse(data) : [];
+        // Firebase 초기화
+        try {
+            // Firebase가 이미 초기화되었는지 확인
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            } else {
+                firebase.app(); // 이미 초기화된 경우
+            }
+            console.log("✅ Firebase 초기화 성공!");
             
-            // 데이터가 아예 없으면 샘플 생성
-            if (allProducts.length === 0) {
-                allProducts = [
-                    { 
-                        id: 1, 
-                        title: "몬스테라 아단소니", 
-                        price: 12000, 
-                        category: "관엽식물", 
-                        status: "판매중", 
-                        sellerLocation: "부산 해운대구", 
-                        likes: 12, 
-                        createdDate: "2024-01-20", 
-                        description: "잎이 아주 건강해요!", 
-                        images: ["https://images.unsplash.com/photo-1517191434949-5e90cd67d2b6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"]
-                    },
-                    { 
-                        id: 2, 
-                        title: "다육이 염좌", 
-                        price: 25000, 
-                        category: "다육식물", 
-                        status: "판매중", 
-                        sellerLocation: "서울 강남구", 
-                        likes: 5, 
-                        createdDate: "2024-01-22", 
-                        description: "대형 화분 포함입니다.", 
-                        images: ["https://images.unsplash.com/photo-1485955900006-10f4d324d411?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"]
-                    },
-                    { 
-                        id: 3, 
-                        title: "테라코타 화분 세트", 
-                        price: 15000, 
-                        category: "화분/용품", 
-                        status: "판매중", 
-                        sellerLocation: "서울 서초구", 
-                        likes: 8, 
-                        createdDate: "2024-01-18", 
-                        description: "고급 테라코타 화분 3종 세트", 
-                        images: ["https://images.unsplash.com/photo-1426170042593-200f250dfdaf?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"]
-                    },
-                    { 
-                        id: 4, 
-                        title: "선인장 무료나눔", 
-                        price: 0, 
-                        category: "다육식물", 
-                        status: "판매중", 
-                        sellerLocation: "서울 마포구", 
-                        likes: 15, 
-                        createdDate: "2024-01-15", 
-                        description: "잘 자란 선인장 나눔합니다", 
-                        images: ["https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"]
-                    }
-                ];
-                localStorage.setItem('plantiaProducts', JSON.stringify(allProducts));
+            // Firestore 및 Auth 참조 가져오기
+            const db = firebase.firestore();
+            const auth = firebase.auth();
+            
+            // Firestore 설정
+            if (db && db.settings) {
+                db.settings({
+                    timestampsInSnapshots: true
+                });
+            }
+            
+            // 테스트 함수
+            testFirebaseConnection();
+            
+        } catch (error) {
+            console.error("❌ Firebase 초기화 실패:", error);
+        }
+
+        // ========== Firebase 연결 테스트 ==========
+        async function testFirebaseConnection() {
+            try {
+                console.log("🔗 Firebase 연결 테스트 중...");
+                
+                if (!db) {
+                    console.error("Firestore DB가 초기화되지 않음");
+                    return;
+                }
+                
+                // 간단한 Firestore 테스트
+                const testRef = db.collection('test');
+                
+                // 데이터 쓰기 테스트
+                const docRef = await testRef.add({
+                    message: 'Firebase 연결 테스트',
+                    timestamp: new Date(),
+                    app: 'PlantiaWorld'
+                });
+                console.log("📝 테스트 데이터 작성 완료:", docRef.id);
+                
+                // 데이터 읽기 테스트
+                const snapshot = await testRef.orderBy('timestamp', 'desc').limit(5).get();
+                console.log("📊 최근 테스트 데이터:", snapshot.size + "개");
+                
+            } catch (error) {
+                console.error("❌ Firebase 연결 테스트 실패:", error);
+                
+                // 오류 상세 정보
+                if (error.code === 'permission-denied') {
+                    console.error("⚠️ Firestore 보안 규칙 확인 필요!");
+                }
             }
         }
 
+        // ========== 나머지 기존 코드 ==========
+        let allProducts = [];
+        let currentFilter = 'all';
+        let currentSort = 'recent';
+        let unsubscribeProducts = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('페이지 로드 시작');
+            
+            // Firebase 인증 상태 확인
+            if (auth) {
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        console.log("👤 Firebase 사용자 로그인:", user.email);
+                        const userData = {
+                            uid: user.uid,
+                            name: user.displayName || user.email.split('@')[0],
+                            email: user.email,
+                            location: "서울 강남구"
+                        };
+                        localStorage.setItem('plantiaUser', JSON.stringify(userData));
+                    } else {
+                        console.log("👤 Firebase 사용자 로그아웃");
+                        localStorage.removeItem('plantiaUser');
+                    }
+                    checkLoginStatus();
+                });
+            }
+            
+            // Firestore에서 상품 데이터 로드
+            await loadProductsFromFirestore();
+        });
+
+        // ========== Firestore에서 상품 데이터 로드 ==========
+        async function loadProductsFromFirestore() {
+            try {
+                console.log('📡 Firestore에서 상품 데이터 로드 중...');
+                
+                if (!db) {
+                    console.error("Firestore DB가 초기화되지 않음");
+                    loadFromLocalStorage();
+                    return;
+                }
+                
+                // Firestore 컬렉션 참조
+                const productsRef = db.collection('products');
+                
+                // 기존 리스너 제거
+                if (unsubscribeProducts) {
+                    unsubscribeProducts();
+                }
+                
+                // 실시간 리스너 설정
+                unsubscribeProducts = productsRef
+                    .where('status', '==', '판매중')
+                    .orderBy('createdAt', 'desc')
+                    .limit(50)
+                    .onSnapshot(
+                        (snapshot) => {
+                            console.log('🔄 새 데이터 수신:', snapshot.size + '개');
+                            
+                            allProducts = [];
+                            snapshot.forEach((doc) => {
+                                const product = doc.data();
+                                product.id = doc.id;
+                                allProducts.push(product);
+                            });
+                            
+                            // 로컬 저장소에 백업
+                            localStorage.setItem('plantiaProducts', JSON.stringify(allProducts));
+                            
+                            // 화면 업데이트
+                            displayProducts();
+                            
+                            // UI 업데이트
+                            updateUI();
+                        },
+                        (error) => {
+                            console.error('Firestore 리스너 오류:', error);
+                            loadFromLocalStorage();
+                        }
+                    );
+                    
+            } catch (error) {
+                console.error('Firestore 로드 오류:', error);
+                loadFromLocalStorage();
+            }
+        }
+
+        // ========== UI 업데이트 ==========
+        function updateUI() {
+            // 로딩 인디케이터 숨기기
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.classList.add('hidden');
+            }
+            
+            // 상품 그리드 표시
+            const productGrid = document.getElementById('productGrid');
+            if (productGrid) {
+                productGrid.classList.remove('hidden');
+            }
+            
+            // 상품 개수 업데이트
+            const productCount = document.getElementById('productCount');
+            if (productCount) {
+                productCount.textContent = `${allProducts.length}개 상품`;
+            }
+            
+            // 빈 상태 체크
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) {
+                if (allProducts.length === 0) {
+                    emptyState.classList.remove('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                }
+            }
+        }
+
+        // ========== 로컬 스토리지에서 데이터 로드 (백업) ==========
+        function loadFromLocalStorage() {
+            console.log('📂 로컬 스토리지에서 데이터 로드');
+            const data = localStorage.getItem('plantiaProducts');
+            allProducts = data ? JSON.parse(data) : [];
+            
+            if (allProducts.length === 0) {
+                console.log('샘플 데이터 생성');
+                allProducts = createSampleProducts();
+                localStorage.setItem('plantiaProducts', JSON.stringify(allProducts));
+            }
+            
+            updateUI();
+            displayProducts();
+        }
+
+        // ========== 샘플 데이터 생성 ==========
+        function createSampleProducts() {
+            console.log('샘플 데이터 생성');
+            return [
+                {
+                    id: '1',
+                    title: "몬스테라 아단소니",
+                    price: 12000,
+                    category: "관엽식물",
+                    sellerLocation: "서울 강남구",
+                    likes: 12,
+                    createdAt: new Date(),
+                    status: "판매중",
+                    description: "잎이 아주 건강해요!",
+                    images: ["https://images.unsplash.com/photo-1517191434949-5e90cd67d2b6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"]
+                },
+                {
+                    id: '2',
+                    title: "다육이 염좌",
+                    price: 8000,
+                    category: "다육식물",
+                    sellerLocation: "부산 해운대구",
+                    likes: 5,
+                    createdAt: new Date(Date.now() - 3600000),
+                    status: "판매중",
+                    description: "귀여운 다육식물입니다.",
+                    images: ["https://images.unsplash.com/photo-1485955900006-10f4d324d411?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60"]
+                }
+            ];
+        }
+
+        // ========== 상품 표시 함수 ==========
         function displayProducts() {
             const container = document.getElementById('productGrid');
             if (!container) return;
 
-            let filtered = currentFilter === 'all' ? [...allProducts] : allProducts.filter(p => p.category === currentFilter);
+            let filtered = currentFilter === 'all' 
+                ? [...allProducts] 
+                : allProducts.filter(p => p.category === currentFilter);
             
-            if (currentSort === 'price') filtered.sort((a, b) => a.price - b.price);
-            else filtered.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+            // 정렬 적용
+            if (currentSort === 'price') {
+                filtered.sort((a, b) => a.price - b.price);
+            } else {
+                filtered.sort((a, b) => {
+                    const dateA = a.createdAt ? a.createdAt.toDate() : new Date(a.createdDate || 0);
+                    const dateB = b.createdAt ? b.createdAt.toDate() : new Date(b.createdDate || 0);
+                    return dateB - dateA;
+                });
+            }
 
             document.getElementById('sectionTitle').textContent = currentFilter === 'all' ? '최신 식물' : currentFilter;
             
             let html = filtered.map(p => createCardHtml(p)).join('');
-            // 등록 카드 추가
-            html += `<div onclick="location.href='add-product.html'" class="product-card border-2 border-dashed border-green-200 rounded-2xl flex flex-col items-center justify-center p-6 text-green-600 hover:bg-green-50 min-h-[200px] cursor-pointer">
-                        <i class="fas fa-plus-circle text-3xl mb-2"></i><span class="font-medium">나도 등록하기</span>
-                    </div>`;
+            
+            // 로그인 상태에서만 "나도 등록하기" 버튼 표시
+            const user = JSON.parse(localStorage.getItem('plantiaUser') || 'null');
+            if (user) {
+                html += `<div onclick="location.href='add-product.html'" class="product-card border-2 border-dashed border-green-200 rounded-2xl flex flex-col items-center justify-center p-6 text-green-600 hover:bg-green-50 min-h-[200px] cursor-pointer">
+                            <i class="fas fa-plus-circle text-3xl mb-2"></i>
+                            <span class="font-medium">나도 등록하기</span>
+                        </div>`;
+            }
+            
             container.innerHTML = html;
         }
 
         function createCardHtml(p) {
             const isFree = p.price === 0;
-            // 이미지가 있으면 첫 번째 이미지, 없으면 샘플 이미지 사용
-            const thumbnail = (p.images && p.images.length > 0) ? p.images[0] : `https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=60`;
+            const thumbnail = (p.images && p.images.length > 0) 
+                ? p.images[0] 
+                : `https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=60`;
+            
+            // 시간 계산
+            let timeAgo = '방금 전';
+            if (p.createdAt) {
+                try {
+                    const createdTime = p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
+                    const now = new Date();
+                    const diffInMinutes = Math.floor((now - createdTime) / (1000 * 60));
+                    
+                    if (diffInMinutes < 1) {
+                        timeAgo = '방금 전';
+                    } else if (diffInMinutes < 60) {
+                        timeAgo = `${diffInMinutes}분 전`;
+                    } else if (diffInMinutes < 1440) {
+                        const hours = Math.floor(diffInMinutes / 60);
+                        timeAgo = `${hours}시간 전`;
+                    } else {
+                        const days = Math.floor(diffInMinutes / 1440);
+                        timeAgo = `${days}일 전`;
+                    }
+                } catch (e) {
+                    timeAgo = '시간 정보 없음';
+                }
+            }
             
             return `
-                <div class="product-card bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col cursor-pointer" onclick="location.href='product-detail.html?id=${p.id}'">
+                <div class="product-card bg-white rounded-2xl overflow-hidden shadow-sm flex flex-col cursor-pointer relative" onclick="location.href='product-detail.html?id=${p.id}'">
+                    <!-- 실시간 배지 -->
+                    <div class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full z-10">
+                        <i class="fas fa-circle text-[6px] mr-1"></i>실시간
+                    </div>
+                    
                     <div class="product-image-container">
-                        <img src="${thumbnail}" class="product-image" alt="${p.title}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=60'">
+                        <img src="${thumbnail}" class="product-image" alt="${p.title}" loading="lazy" 
+                             onerror="this.src='https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=60'">
                         ${isFree ? '<div class="sold-out-badge bg-green-600">무료나눔</div>' : ''}
+                        ${p.status === '판매완료' ? '<div class="sold-out-badge bg-red-600">판매완료</div>' : ''}
                     </div>
                     <div class="p-4 flex flex-col flex-grow">
-                        <h3 class="text-sm font-semibold text-gray-800 line-clamp-2 mb-2 h-10">${p.title}</h3>
+                        <h3 class="text-sm font-semibold text-gray-800 line-clamp-2 mb-2">${p.title}</h3>
                         <div class="mt-auto">
-                            <p class="price-tag text-base mb-2">${isFree ? '나눔 🌱' : p.price.toLocaleString() + '원'}</p>
-                            <div class="flex items-center justify-between text-[11px] text-gray-400 border-t pt-2">
-                                <span>${p.sellerLocation || p.location || '지역 정보 없음'}</span>
+                            <p class="price-tag text-base mb-1">${isFree ? '나눔 🌱' : p.price.toLocaleString() + '원'}</p>
+                            <div class="flex items-center justify-between text-[10px] text-gray-400">
+                                <span class="flex items-center">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>
+                                    ${p.sellerLocation || p.location || '지역 정보 없음'}
+                                </span>
+                                <span>${timeAgo}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-[10px] text-gray-400 border-t pt-2 mt-2">
+                                <span>${p.category || '기타'}</span>
                                 <div class="flex items-center space-x-2">
                                     <span><i class="far fa-heart mr-0.5"></i>${p.likes || 0}</span>
                                 </div>
@@ -278,6 +572,7 @@
                 </div>`;
         }
 
+        // ========== 로그인 상태 관리 ==========
         function checkLoginStatus() {
             const user = JSON.parse(localStorage.getItem('plantiaUser') || 'null');
             const authDiv = document.getElementById('authButtons');
@@ -303,10 +598,11 @@
                 
                 // 지역 상품 섹션 표시
                 document.getElementById('localProductsSection').classList.remove('hidden');
+                displayLocalProducts();
             } else {
                 // 로그인 안 된 상태
                 authDiv.innerHTML = `
-                    <button onclick="location.href='login.html'" class="flex items-center space-x-2 text-gray-600 hover:text-green-700">
+                    <button onclick="goToLogin()" class="flex items-center space-x-2 text-gray-600 hover:text-green-700">
                         <i class="fas fa-user"></i>
                         <span class="text-sm hidden md:inline">로그인</span>
                     </button>
@@ -317,15 +613,17 @@
             }
         }
 
+        // ========== 지역 상품 표시 ==========
         function displayLocalProducts() {
             const user = JSON.parse(localStorage.getItem('plantiaUser') || 'null');
             if (!user || !user.location) return;
+            
             const grid = document.getElementById('localProductGrid');
             const section = document.getElementById('localProductsSection');
             
             if (!grid || !section) return;
             
-            const userCity = user.location.split(' ')[0]; // '서울 강남구' -> '서울'
+            const userCity = user.location.split(' ')[0];
             const localItems = allProducts.filter(p => 
                 (p.sellerLocation || p.location || '').includes(userCity)
             ).slice(0, 6);
@@ -343,22 +641,33 @@
             }
         }
 
-        // 마이페이지로 이동
+        // ========== 기타 함수 ==========
         function goToMyPage() {
             const user = JSON.parse(localStorage.getItem('plantiaUser'));
             if (user) {
                 window.location.href = 'my-page.html';
             } else {
                 alert('로그인이 필요합니다.');
-                window.location.href = 'login.html';
+                goToLogin();
             }
         }
 
-        // 로그아웃
-        function logout() {
+        function goToLogin() {
+            window.location.href = 'login.html';
+        }
+
+        async function logout() {
             if(confirm('로그아웃 하시겠습니까?')) { 
-                localStorage.removeItem('plantiaUser'); 
-                location.reload(); 
+                try {
+                    if (auth) {
+                        await auth.signOut();
+                    }
+                    localStorage.removeItem('plantiaUser'); 
+                    location.reload();
+                } catch (error) {
+                    console.error('로그아웃 오류:', error);
+                    alert('로그아웃 중 오류가 발생했습니다.');
+                }
             }
         }
 
@@ -369,19 +678,26 @@
         
         function sortProducts(type) {
             currentSort = type;
-            document.getElementById('sortRecentBtn').className = type === 'recent' ? 'text-green-600' : 'text-gray-400 hover:text-green-600';
-            document.getElementById('sortPriceBtn').className = type === 'price' ? 'text-green-600' : 'text-gray-400 hover:text-green-600';
+            document.getElementById('sortRecentBtn').className = type === 'recent' ? 'text-green-600 font-medium' : 'text-gray-400 hover:text-green-600';
+            document.getElementById('sortPriceBtn').className = type === 'price' ? 'text-green-600 font-medium' : 'text-gray-400 hover:text-green-600';
             displayProducts();
         }
         
-        function showFavorites() { 
-            alert('관심 상품 기능은 로그인 후 이용 가능합니다.'); 
+        function refreshProducts() {
+            location.reload();
         }
         
         function refreshLocalProducts() { 
             displayLocalProducts(); 
             alert('지역 상품 목록이 새로고침 되었습니다.');
         }
+
+        // 페이지 언로드 시 리스너 정리
+        window.addEventListener('beforeunload', () => {
+            if (unsubscribeProducts) {
+                unsubscribeProducts();
+            }
+        });
     </script>
 </body>
 </html>
