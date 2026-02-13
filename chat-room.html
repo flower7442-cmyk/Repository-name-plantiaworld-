@@ -7,11 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-
     <style>
         body { background-color: #f1f5f9; height: 100vh; display: flex; flex-direction: column; }
         .chat-container { flex: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; }
@@ -53,7 +48,7 @@
     <header class="bg-white border-b border-gray-100 px-4 py-3 flex items-center sticky top-0 z-10">
         <button onclick="history.back()" class="mr-3 text-gray-500"><i class="fas fa-chevron-left text-xl"></i></button>
         <div class="flex items-center flex-1">
-            <img id="otherUserImg" src="https://via.placeholder.com/40" class="w-10 h-10 rounded-full border border-gray-100">
+            <img id="otherUserImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' fill='%23e5e7eb'/%3E%3Ccircle cx='60' cy='45' r='22' fill='%23d1d5db'/%3E%3Cellipse cx='60' cy='90' rx='35' ry='25' fill='%23d1d5db'/%3E%3C/svg%3E" class="w-10 h-10 rounded-full border border-gray-100">
             <div class="ml-3">
                 <h3 id="otherUserName" class="font-bold text-gray-800">로딩 중...</h3>
                 <p class="text-[10px] text-green-500 flex items-center"><span id="onlineStatus" class="w-2 h-2 bg-green-500 rounded-full mr-1"></span> <span id="statusText">응답 빠름</span></p>
@@ -72,7 +67,7 @@
 
     <div class="bg-white px-4 py-2 border-b border-gray-100 flex items-center justify-between">
         <div class="flex items-center">
-            <img id="productImg" src="https://via.placeholder.com/50" class="w-12 h-12 rounded-lg object-cover">
+            <img id="productImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f3f4f6'/%3E%3Ctext x='100' y='105' text-anchor='middle' fill='%239ca3af' font-size='14' font-family='sans-serif'%3E이미지 없음%3C/text%3E%3C/svg%3E" class="w-12 h-12 rounded-lg object-cover">
             <div class="ml-3">
                 <p id="productTitle" class="text-sm font-semibold text-gray-700">로딩 중...</p>
                 <p id="productPrice" class="text-xs font-bold text-gray-900">0원</p>
@@ -115,353 +110,506 @@
         </div>
     </div>
 
-    <script>
-        // 1. Firebase 설정 및 초기화
+    <!-- Firebase v10 모듈 방식 스크립트 -->
+    <script type="module">
+        // ============================================
+        // Firebase v10 SDK Import
+        // ============================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            query, 
+            orderBy, 
+            onSnapshot, 
+            serverTimestamp,
+            doc,
+            getDoc,
+            deleteDoc,
+            updateDoc
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { 
+            getStorage, 
+            ref, 
+            uploadBytesResumable, 
+            getDownloadURL 
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+        // ============================================
+        // Firebase 설정 및 초기화
+        // ============================================
         const firebaseConfig = {
-             apiKey: "AIzaSyDVrlCojDTcSaIkhTaSCEzpuLQhqu-W9jI",
-             authDomain: "plantiaworld.firebaseapp.com",
-             projectId: "plantiaworld",
-             storageBucket: "plantiaworld.firebasestorage.app",
-             messagingSenderId: "18112813073",
-             appId: "1:18112813073:web:855a0eb3ad14482cdb79b0",
+            apiKey: "AIzaSyAW_z3hoI9SZ1-hoxKVYBKs7rbdo8n6wdc",
+            authDomain: "plantiaworld.firebaseapp.com",
+            projectId: "plantiaworld",
+            storageBucket: "plantiaworld.firebasestorage.app",
+            messagingSenderId: "18112813073",
+            appId: "1:18112813073:web:7247046c038a3831db79b0",
+            measurementId: "G-8XSSM279KY"
         };
-        
-        // Firebase 앱이 이미 초기화되었는지 확인
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        const storage = firebase.storage();
-        
-        // 오프라인 지속성 활성화
-        db.enablePersistence()
-          .catch((err) => {
-              console.log("오프라인 지원 불가:", err.code);
-          });
 
-        // 2. URL 파라미터에서 정보 추출
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomId = urlParams.get('roomId') || "default_room";
-        const productId = urlParams.get('productId');
-        
-        // roomId에서 상대방 ID 추출 (예: "user1_user2_product123" 형식)
-        const extractUserIds = () => {
-            const parts = roomId.split('_');
-            // roomId에 사용자 ID가 포함되어 있다고 가정
-            if (parts.length >= 2) {
-                return parts.slice(0, 2);
-            }
-            return []; // 또는 기본값 반환
-        };
-        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const storage = getStorage(app);
+
+        // ============================================
+        // 전역 변수
+        // ============================================
         let currentUser = null;
-        let otherUserId = null;
+        let otherUser = null;
+        let chatData = null;
         let selectedFile = null;
+        let unsubscribeMessages = null;
+        let isInitialLoad = true; // 초기 로딩 플래그
 
-        // 3. 인증 상태 감지 및 초기화
-        auth.onAuthStateChanged(async (user) => {
+        // URL 파라미터 추출 (product-detail.html에서 chat-room.html?id=chatId 형식으로 전달)
+        const urlParams = new URLSearchParams(window.location.search);
+        const chatId = urlParams.get('id');
+
+        if (!chatId) {
+            alert('잘못된 접근입니다.');
+            window.location.href = 'index.html';
+            throw new Error('채팅방 ID가 없습니다.');
+        }
+
+        console.log('📨 채팅방 ID:', chatId);
+
+        // ============================================
+        // 1. 인증 상태 감지
+        // ============================================
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
+                console.log('✅ 로그인된 사용자:', user.uid);
+                console.log('📧 이메일:', user.email);
+                console.log('👤 닉네임:', user.displayName);
                 
-                // roomId에서 사용자 ID 추출
-                const userIds = extractUserIds();
-                if (userIds.length >= 2) {
-                    otherUserId = userIds.find(id => id !== currentUser.uid);
+                try {
+                    // 채팅방 정보 로드 (상품 정보도 함께 로드됨)
+                    await loadChatRoom();
+                    
+                    // 메시지 실시간 수신 시작
+                    listenToMessages();
+                    
+                    // 이벤트 리스너 설정
+                    setupEventListeners();
+                    
+                    console.log('✅ 채팅방 초기화 완료');
+                } catch (error) {
+                    console.error('❌ 초기화 실패:', error);
+                    alert('채팅방을 불러올 수 없습니다.');
+                    window.location.href = 'index.html';
                 }
-                
-                // 채팅방 존재 확인 및 생성
-                await ensureChatRoomExists();
-                
-                // 데이터 로드
-                await loadOtherUserInfo();
-                await loadProductInfo();
-                await loadMessages();
-                setupEventListeners();
-                
-                // 상대방 온라인 상태 모니터링
-                monitorUserStatus();
             } else {
-                location.href = 'login.html';
+                console.log('❌ 로그인이 필요합니다.');
+                alert('로그인이 필요합니다.');
+                window.location.href = 'login.html';
             }
         });
 
-        // 4. 채팅방 존재 확인 및 생성 함수
-        async function ensureChatRoomExists() {
-            if (!otherUserId) return;
-            
-            const roomRef = db.collection('chats').doc(roomId);
-            const roomDoc = await roomRef.get();
-            
-            if (!roomDoc.exists) {
-                await roomRef.set({
-                    participants: [currentUser.uid, otherUserId],
-                    productId: productId,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-                    lastMessage: '',
-                    participantNames: {}
-                }, { merge: true });
+        // ============================================
+        // 2. 채팅방 정보 로드
+        // ============================================
+        async function loadChatRoom() {
+            try {
+                const chatDocRef = doc(db, 'chats', chatId);
+                const chatSnap = await getDoc(chatDocRef);
                 
-                // 참가자 이름 정보 업데이트
-                const currentUserData = await db.collection('users').doc(currentUser.uid).get();
-                const otherUserData = await db.collection('users').doc(otherUserId).get();
-                
-                if (currentUserData.exists && otherUserData.exists) {
-                    await roomRef.update({
-                        [`participantNames.${currentUser.uid}`]: currentUserData.data().nickname || currentUserData.data().displayName,
-                        [`participantNames.${otherUserId}`]: otherUserData.data().nickname || otherUserData.data().displayName
-                    });
+                if (!chatSnap.exists()) {
+                    console.error('❌ 채팅방이 존재하지 않습니다.');
+                    alert('채팅방을 찾을 수 없습니다.');
+                    window.location.href = 'index.html';
+                    return;
                 }
+                
+                chatData = chatSnap.data();
+                console.log('✅ 채팅방 정보 로드:', chatData);
+                
+                // participants 배열 또는 buyerId/sellerId로 참여자 확인
+                const participants = chatData.participants || 
+                    [chatData.buyerId, chatData.sellerId].filter(Boolean);
+                
+                if (!participants.includes(currentUser.uid)) {
+                    console.error('❌ 채팅 참여자가 아닙니다.');
+                    alert('채팅 권한이 없습니다.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                const otherUserId = participants.find(id => id !== currentUser.uid);
+                
+                if (otherUserId) {
+                    await loadOtherUserInfo(otherUserId);
+                } else {
+                    console.error('❌ 상대방을 찾을 수 없습니다.');
+                }
+                
+                // 상품 정보 로드
+                if (chatData.productId) {
+                    await loadProductInfo(chatData.productId);
+                }
+                
+                // 읽음 상태 업데이트
+                await markAsRead();
+                
+            } catch (error) {
+                console.error('❌ 채팅방 로드 실패:', error);
+                alert('채팅방을 불러올 수 없습니다.');
+                window.location.href = 'index.html';
             }
         }
 
-        // 5. 상대방 사용자 정보 불러오기
-        async function loadOtherUserInfo() {
-            if (!otherUserId) return;
-            
+        // ============================================
+        // 3. 상대방 정보 로드
+        // ============================================
+        async function loadOtherUserInfo(userId) {
             try {
-                const userDoc = await db.collection('users').doc(otherUserId).get();
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    document.getElementById('otherUserName').textContent = 
-                        userData.nickname || userData.displayName || "사용자";
+                const userDocRef = doc(db, 'users', userId);
+                const userSnap = await getDoc(userDocRef);
+                
+                if (userSnap.exists()) {
+                    otherUser = { id: userId, ...userSnap.data() };
+                    console.log('✅ 상대방 정보 로드:', otherUser);
                     
-                    if (userData.profileImage) {
-                        document.getElementById('otherUserImg').src = userData.profileImage;
-                    }
+                    // UI 업데이트
+                    document.getElementById('otherUserName').textContent = otherUser.nickname || otherUser.email || '사용자';
+                    document.getElementById('otherUserImg').src = otherUser.profileImage || otherUser.photoURL || 'data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' fill='%23e5e7eb'/%3E%3Ccircle cx='60' cy='45' r='22' fill='%23d1d5db'/%3E%3Cellipse cx='60' cy='90' rx='35' ry='25' fill='%23d1d5db'/%3E%3C/svg%3E';
                     
-                    // 온라인 상태 확인
-                    const statusDoc = await db.collection('userStatus').doc(otherUserId).get();
-                    if (statusDoc.exists) {
-                        const status = statusDoc.data().state || 'offline';
-                        const statusElement = document.getElementById('onlineStatus');
-                        const statusText = document.getElementById('statusText');
-                        
-                        if (status === 'online') {
-                            statusElement.className = 'w-2 h-2 bg-green-500 rounded-full mr-1';
-                            statusText.textContent = '온라인';
-                        } else {
-                            statusElement.className = 'w-2 h-2 bg-gray-400 rounded-full mr-1';
-                            statusText.textContent = '오프라인';
-                        }
-                    }
+                    // 이미지 에러 처리
+                    document.getElementById('otherUserImg').onerror = function() {
+                        this.src = 'data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' fill='%23e5e7eb'/%3E%3Ccircle cx='60' cy='45' r='22' fill='%23d1d5db'/%3E%3Cellipse cx='60' cy='90' rx='35' ry='25' fill='%23d1d5db'/%3E%3C/svg%3E';
+                    };
+                    
+                    // 온라인 상태 표시
+                    updateOnlineStatus(otherUser);
+                } else {
+                    console.log('⚠️ 사용자 정보를 찾을 수 없습니다.');
+                    document.getElementById('otherUserName').textContent = '알 수 없는 사용자';
                 }
             } catch (error) {
-                console.error("사용자 정보 로드 실패:", error);
-                document.getElementById('otherUserName').textContent = "알 수 없는 사용자";
+                console.error('❌ 사용자 정보 로드 실패:', error);
+                document.getElementById('otherUserName').textContent = '사용자';
             }
         }
 
-        // 6. 사용자 온라인 상태 모니터링
-        function monitorUserStatus() {
-            if (!otherUserId) return;
+        // ============================================
+        // 3-1. 읽음 상태 업데이트
+        // ============================================
+        async function markAsRead() {
+            if (!currentUser || !chatId) return;
             
-            db.collection('userStatus').doc(otherUserId)
-                .onSnapshot((doc) => {
-                    if (doc.exists) {
-                        const status = doc.data().state || 'offline';
-                        const statusElement = document.getElementById('onlineStatus');
-                        const statusText = document.getElementById('statusText');
-                        
-                        if (status === 'online') {
-                            statusElement.className = 'w-2 h-2 bg-green-500 rounded-full mr-1';
-                            statusText.textContent = '온라인';
-                        } else {
-                            statusElement.className = 'w-2 h-2 bg-gray-400 rounded-full mr-1';
-                            statusText.textContent = '오프라인';
-                        }
-                    }
+            try {
+                const chatDocRef = doc(db, 'chats', chatId);
+                
+                // 현재 사용자의 읽지 않은 메시지 수를 0으로 초기화
+                await updateDoc(chatDocRef, {
+                    [`unreadCount.${currentUser.uid}`]: 0
                 });
-        }
-
-        // 7. 상품 정보 불러오기
-        async function loadProductInfo() {
-            if (!productId) return;
-            
-            try {
-                const productDoc = await db.collection('products').doc(productId).get();
-                if (productDoc.exists) {
-                    const data = productDoc.data();
-                    document.getElementById('productTitle').textContent = 
-                        data.title || "제목 없음";
-                    document.getElementById('productPrice').textContent = 
-                        data.price ? `${data.price.toLocaleString()}원` : "가격 정보 없음";
-                    
-                    if (data.images && data.images.length > 0) {
-                        document.getElementById('productImg').src = data.images[0];
-                    }
-                }
+                
+                console.log('✅ 읽음 상태 업데이트 완료');
             } catch (error) {
-                console.error("상품 정보 로드 실패:", error);
+                console.error('⚠️ 읽음 상태 업데이트 실패:', error);
+                // 에러가 나도 채팅은 계속 진행
             }
         }
 
-        // 8. 메시지 실시간 로드 (성능 최적화)
-        let isFirstLoad = true;
-        let lastMessageId = null;
-
-        function loadMessages() {
-            const container = document.getElementById('chatMessages');
+        // ============================================
+        // 4. 상품 정보 로드
+        // ============================================
+        async function loadProductInfo(productId) {
+            if (!productId) {
+                console.log('⚠️ 상품 ID가 없습니다.');
+                return;
+            }
             
-            db.collection('chats').doc(roomId).collection('messages')
-                .orderBy('timestamp', 'asc')
-                .onSnapshot((snapshot) => {
-                    const changes = snapshot.docChanges();
+            try {
+                const productDocRef = doc(db, 'products', productId);
+                const productSnap = await getDoc(productDocRef);
+                
+                if (productSnap.exists()) {
+                    const product = productSnap.data();
+                    console.log('✅ 상품 정보 로드:', product);
                     
-                    changes.forEach((change) => {
+                    const price = product.price === 0 ? '나눔 🌱' : `${(product.price || 0).toLocaleString()}원`;
+                    
+                    document.getElementById('productTitle').textContent = product.title || '상품';
+                    document.getElementById('productPrice').textContent = price;
+                    document.getElementById('productImg').src = product.images?.[0] || 'data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f3f4f6'/%3E%3Ctext x='100' y='105' text-anchor='middle' fill='%239ca3af' font-size='14' font-family='sans-serif'%3E이미지 없음%3C/text%3E%3C/svg%3E';
+                    
+                    // 상품 클릭 시 상세 페이지로 이동
+                    document.getElementById('productImg').onclick = () => {
+                        window.location.href = `product-detail.html?id=${productId}`;
+                    };
+                } else {
+                    console.log('⚠️ 상품 정보를 찾을 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('❌ 상품 정보 로드 실패:', error);
+            }
+        }
+
+        // ============================================
+        // 5. 메시지 실시간 수신
+        // ============================================
+        function listenToMessages() {
+            const messagesRef = collection(db, 'chats', chatId, 'messages');
+            const q = query(messagesRef, orderBy('timestamp', 'asc'));
+            
+            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+                const chatContainer = document.getElementById('chatMessages');
+                
+                // 초기 로딩 시 전체 메시지 렌더링
+                if (isInitialLoad) {
+                    chatContainer.innerHTML = ''; // 기존 내용 제거
+                    
+                    snapshot.docs.forEach((doc) => {
+                        const messageData = doc.data();
+                        const messageElement = createMessageElement(doc.id, messageData);
+                        chatContainer.appendChild(messageElement);
+                    });
+                    
+                    isInitialLoad = false;
+                    scrollToBottom();
+                    console.log(`✅ 메시지 ${snapshot.docs.length}개 로드 완료`);
+                } else {
+                    // 실시간 변경사항만 처리
+                    snapshot.docChanges().forEach((change) => {
                         if (change.type === 'added') {
-                            const data = change.doc.data();
-                            const isMine = data.senderId === currentUser.uid;
-                            const time = data.timestamp ? 
-                                data.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
-                                new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                            
-                            let messageHtml = '';
-                            
-                            if (data.type === 'image') {
-                                // 이미지 메시지
-                                messageHtml = `
-                                    <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} message-item" data-id="${change.doc.id}">
-                                        <div class="message-bubble ${isMine ? 'my-message' : 'other-message'} relative">
-                                            ${data.text ? `<div class="mb-2">${data.text}</div>` : ''}
-                                            <img src="${data.imageUrl}" alt="전송된 이미지" 
-                                                 class="image-message cursor-pointer" 
-                                                 onclick="showImageModal('${data.imageUrl}')">
-                                            <div class="message-menu">
-                                                <button onclick="copyMessage('${change.doc.id}')" class="text-xs text-gray-400 hover:text-gray-600 mr-2">
-                                                    <i class="fas fa-copy"></i>
-                                                </button>
-                                                ${isMine ? `
-                                                    <button onclick="deleteMessage('${change.doc.id}')" class="text-xs text-gray-400 hover:text-red-500">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                ` : ''}
-                                            </div>
-                                        </div>
-                                        <span class="text-[10px] text-gray-400 mt-1 px-1">${time}</span>
-                                    </div>`;
-                            } else {
-                                // 텍스트 메시지
-                                messageHtml = `
-                                    <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} message-item" data-id="${change.doc.id}">
-                                        <div class="message-bubble ${isMine ? 'my-message' : 'other-message'} relative">
-                                            ${data.text}
-                                            <div class="message-menu">
-                                                <button onclick="copyMessage('${change.doc.id}')" class="text-xs text-gray-400 hover:text-gray-600 mr-2">
-                                                    <i class="fas fa-copy"></i>
-                                                </button>
-                                                ${isMine ? `
-                                                    <button onclick="deleteMessage('${change.doc.id}')" class="text-xs text-gray-400 hover:text-red-500">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                ` : ''}
-                                            </div>
-                                        </div>
-                                        <span class="text-[10px] text-gray-400 mt-1 px-1">${time}</span>
-                                    </div>`;
-                            }
-                            
-                            if (isFirstLoad) {
-                                container.innerHTML += messageHtml;
-                            } else {
-                                container.insertAdjacentHTML('beforeend', messageHtml);
-                            }
-                        }
-                        
-                        // 메시지 삭제 처리
-                        if (change.type === 'removed') {
-                            const messageElement = container.querySelector(`[data-id="${change.doc.id}"]`);
+                            const messageData = change.doc.data();
+                            const messageElement = createMessageElement(change.doc.id, messageData);
+                            chatContainer.appendChild(messageElement);
+                            scrollToBottom();
+                        } else if (change.type === 'removed') {
+                            const messageElement = document.querySelector(`[data-message-id="${change.doc.id}"]`);
                             if (messageElement) {
                                 messageElement.remove();
                             }
+                        } else if (change.type === 'modified') {
+                            // 메시지 수정 처리 (선택 사항)
+                            const messageElement = document.querySelector(`[data-message-id="${change.doc.id}"]`);
+                            if (messageElement) {
+                                const messageData = change.doc.data();
+                                const newElement = createMessageElement(change.doc.id, messageData);
+                                messageElement.replaceWith(newElement);
+                            }
                         }
                     });
-                    
-                    if (isFirstLoad) {
-                        isFirstLoad = false;
-                    }
-                    
-                    scrollToBottom();
-                }, (error) => {
-                    console.error("메시지 로드 실패:", error);
-                });
-        }
-
-        // 9. 메시지 전송 함수 (텍스트 + 이미지)
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            
-            if (!text && !selectedFile) return;
-            
-            try {
-                let messageData = {
-                    senderId: currentUser.uid,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    type: 'text',
-                    text: text || ''
-                };
-                
-                // 이미지 파일이 있는 경우
-                if (selectedFile) {
-                    const imageUrl = await uploadImage(selectedFile);
-                    messageData.type = 'image';
-                    messageData.imageUrl = imageUrl;
-                    
-                    // 파일 미리보기 제거
-                    clearFilePreview();
                 }
-                
-                // 메시지 저장
-                await db.collection('chats').doc(roomId).collection('messages').add(messageData);
-                
-                // 채팅방 최신 정보 업데이트
-                await db.collection('chats').doc(roomId).set({
-                    lastMessage: text || '사진을 보냈습니다.',
-                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-                    lastSenderId: currentUser.uid
-                }, { merge: true });
-                
-                // 입력창 초기화
-                input.value = '';
-                input.style.height = 'auto';
-                selectedFile = null;
-                
-            } catch (error) {
-                console.error("메시지 전송 실패:", error);
-                alert('메시지 전송에 실패했습니다.');
-            }
-        }
-
-        // 10. 이미지 업로드 함수
-        async function uploadImage(file) {
-            return new Promise((resolve, reject) => {
-                const storageRef = storage.ref();
-                const fileName = `chat_images/${roomId}/${Date.now()}_${file.name}`;
-                const uploadTask = storageRef.child(fileName).put(file);
-                
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        // 업로드 진행 상황 표시
-                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        console.log(`Upload is ${progress}% done`);
-                    },
-                    (error) => {
-                        console.error("이미지 업로드 실패:", error);
-                        reject(error);
-                    },
-                    async () => {
-                        // 업로드 성공
-                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                        resolve(downloadURL);
-                    }
-                );
+            }, (error) => {
+                console.error('❌ 메시지 수신 실패:', error);
+                if (error.code === 'permission-denied') {
+                    alert('메시지를 볼 권한이 없습니다.');
+                    window.location.href = 'index.html';
+                }
             });
         }
 
-        // 11. 이벤트 리스너 설정
+        // ============================================
+        // 6. 메시지 UI 생성
+        // ============================================
+        function createMessageElement(messageId, data) {
+            const isMyMessage = data.senderId === currentUser.uid;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${isMyMessage ? 'justify-end' : 'justify-start'}`;
+            messageDiv.setAttribute('data-message-id', messageId);
+            
+            // 시스템 메시지 처리
+            if (data.type === 'system') {
+                messageDiv.innerHTML = `
+                    <div class="w-full text-center">
+                        <span class="inline-block bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
+                            ${escapeHtml(data.text || '')}
+                        </span>
+                    </div>
+                `;
+                return messageDiv;
+            }
+            
+            let messageContent = '';
+            
+            // 텍스트 메시지
+            if (data.text) {
+                // 링크 자동 감지 및 변환 (선택 사항)
+                const textWithLinks = escapeHtml(data.text).replace(
+                    /(https?:\/\/[^\s]+)/g, 
+                    '<a href="$1" target="_blank" class="underline">$1</a>'
+                );
+                messageContent = `<p class="break-words whitespace-pre-wrap">${textWithLinks}</p>`;
+            }
+            
+            // 이미지 메시지
+            if (data.imageUrl) {
+                messageContent += `
+                    <img src="${escapeHtml(data.imageUrl)}" 
+                         class="image-message" 
+                         onclick="showImageModal('${escapeHtml(data.imageUrl)}')"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f3f4f6'/%3E%3Ctext x='100' y='105' text-anchor='middle' fill='%239ca3af' font-size='14' font-family='sans-serif'%3E이미지 없음%3C/text%3E%3C/svg%3E'"
+                         loading="lazy">
+                `;
+            }
+            
+            // 일반 메시지
+            const senderName = isMyMessage ? '나' : (otherUser?.nickname || otherUser?.email || '사용자');
+            
+            messageDiv.innerHTML = `
+                <div class="flex flex-col ${isMyMessage ? 'items-end' : 'items-start'} max-w-[75%]">
+                    ${!isMyMessage ? `<span class="text-xs text-gray-500 mb-1 ml-1">${escapeHtml(senderName)}</span>` : ''}
+                    <div class="message-bubble ${isMyMessage ? 'my-message' : 'other-message'}">
+                        ${messageContent}
+                        ${isMyMessage ? `
+                            <div class="message-menu">
+                                <button onclick="toggleMessageMenu(event, '${messageId}')" class="text-white hover:text-gray-200 text-sm">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <span class="text-[10px] text-gray-400 mt-1 mx-1">
+                        ${formatTimestamp(data.timestamp)}
+                    </span>
+                </div>
+            `;
+            
+            return messageDiv;
+        }
+
+        // ============================================
+        // 7. 메시지 전송
+        // ============================================
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const text = messageInput.value.trim();
+            
+            if (!text && !selectedFile) {
+                console.log('⚠️ 전송할 내용이 없습니다.');
+                return;
+            }
+            
+            if (!currentUser) {
+                alert('로그인이 필요합니다.');
+                return;
+            }
+            
+            try {
+                const messageData = {
+                    senderId: currentUser.uid,
+                    senderName: currentUser.displayName || currentUser.email || '익명',
+                    timestamp: serverTimestamp(),
+                    type: 'text'
+                };
+                
+                // 텍스트 추가
+                if (text) {
+                    messageData.text = text;
+                }
+                
+                // 이미지 업로드 및 URL 추가
+                if (selectedFile) {
+                    console.log('📤 이미지 업로드 중...');
+                    const imageUrl = await uploadImage(selectedFile);
+                    messageData.imageUrl = imageUrl;
+                    messageData.type = text ? 'text' : 'image';
+                    console.log('✅ 이미지 업로드 완료:', imageUrl);
+                }
+                
+                // Firestore에 메시지 추가
+                const messagesRef = collection(db, 'chats', chatId, 'messages');
+                await addDoc(messagesRef, messageData);
+                console.log('✅ 메시지 전송 완료');
+                
+                // 채팅방의 lastMessage 및 읽음 상태 업데이트
+                const chatDocRef = doc(db, 'chats', chatId);
+                const updateData = {
+                    lastMessage: text || '사진을 보냈습니다.',
+                    lastMessageTime: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                };
+                
+                // 상대방의 읽지 않은 메시지 수 증가
+                if (otherUser && otherUser.id) {
+                    updateData[`unreadCount.${otherUser.id}`] = (chatData.unreadCount?.[otherUser.id] || 0) + 1;
+                }
+                
+                await updateDoc(chatDocRef, updateData);
+                
+                // 입력창 초기화
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                clearFilePreview();
+                
+            } catch (error) {
+                console.error('❌ 메시지 전송 실패:', error);
+                
+                if (error.code === 'permission-denied') {
+                    alert('메시지 전송 권한이 없습니다.');
+                } else {
+                    alert('메시지 전송에 실패했습니다. 다시 시도해주세요.');
+                }
+            }
+        }
+
+        // ============================================
+        // 8. 이미지 업로드
+        // ============================================
+        async function uploadImage(file) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const fileName = `chat_images/${chatId}/${Date.now()}_${file.name}`;
+                    const storageRef = ref(storage, fileName);
+                    const uploadTask = uploadBytesResumable(storageRef, file);
+                    
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            console.log(`📤 업로드 진행: ${progress.toFixed(0)}%`);
+                            
+                            // 프로그레스 바 업데이트 (선택 사항)
+                            const preview = document.getElementById('filePreview');
+                            if (preview && !preview.classList.contains('hidden')) {
+                                preview.querySelector('.text-xs')?.insertAdjacentHTML('beforeend', 
+                                    ` - ${progress.toFixed(0)}%`);
+                            }
+                        },
+                        (error) => {
+                            console.error('❌ 이미지 업로드 실패:', error);
+                            
+                            if (error.code === 'storage/unauthorized') {
+                                alert('이미지 업로드 권한이 없습니다.');
+                            } else if (error.code === 'storage/quota-exceeded') {
+                                alert('저장 공간이 부족합니다.');
+                            } else {
+                                alert('이미지 업로드에 실패했습니다.');
+                            }
+                            
+                            reject(error);
+                        },
+                        async () => {
+                            try {
+                                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                                console.log('✅ 이미지 URL:', downloadURL);
+                                resolve(downloadURL);
+                            } catch (error) {
+                                console.error('❌ URL 가져오기 실패:', error);
+                                reject(error);
+                            }
+                        }
+                    );
+                } catch (error) {
+                    console.error('❌ 업로드 초기화 실패:', error);
+                    reject(error);
+                }
+            });
+        }
+
+        // ============================================
+        // 9. 이벤트 리스너 설정
+        // ============================================
         function setupEventListeners() {
             const messageInput = document.getElementById('messageInput');
             const sendBtn = document.getElementById('sendBtn');
@@ -475,7 +623,7 @@
             
             // Enter 키로 메시지 전송 (Shift+Enter는 줄바꿈)
             messageInput.onkeypress = (e) => {
-                if(e.key === 'Enter' && !e.shiftKey) {
+                if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     sendMessage();
                 }
@@ -515,13 +663,17 @@
             };
         }
 
-        // 12. 유틸리티 함수들
+        // ============================================
+        // 10. 유틸리티 함수들
+        // ============================================
         function scrollToBottom() {
             const container = document.getElementById('chatMessages');
-            container.scrollTo({
-                top: container.scrollHeight,
-                behavior: 'smooth'
-            });
+            setTimeout(() => {
+                container.scrollTo({
+                    top: container.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 100);
         }
 
         function showFilePreview(file) {
@@ -548,78 +700,132 @@
             }
         }
 
-        function clearFilePreview() {
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return '';
+            
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            // 1분 미만
+            if (diff < 60000) return '방금';
+            
+            // 1시간 미만
+            if (diff < 3600000) {
+                const minutes = Math.floor(diff / 60000);
+                return `${minutes}분 전`;
+            }
+            
+            // 오늘
+            if (date.toDateString() === now.toDateString()) {
+                return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            // 어제
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (date.toDateString() === yesterday.toDateString()) {
+                return '어제 ' + date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+            }
+            
+            // 그 외
+            return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+        }
+
+        function updateOnlineStatus(user) {
+            // 실제 온라인 상태 구현 가능
+            // 예: Realtime Database의 presence 시스템 활용
+            document.getElementById('statusText').textContent = '응답 빠름';
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // ============================================
+        // 11. 전역 함수 (window 객체에 할당)
+        // ============================================
+        window.clearFilePreview = function() {
             const preview = document.getElementById('filePreview');
             preview.innerHTML = '';
             preview.classList.add('hidden');
             document.getElementById('fileInput').value = '';
             selectedFile = null;
-        }
+        };
 
-        function showImageModal(imageUrl) {
+        window.showImageModal = function(imageUrl) {
             document.getElementById('modalImage').src = imageUrl;
             document.getElementById('imageModal').classList.remove('hidden');
-        }
+            document.getElementById('imageModal').classList.add('flex');
+        };
 
-        function closeImageModal() {
+        window.closeImageModal = function() {
             document.getElementById('imageModal').classList.add('hidden');
+            document.getElementById('imageModal').classList.remove('flex');
             document.getElementById('modalImage').src = '';
-        }
+        };
 
-        async function copyMessage(messageId) {
+        window.toggleMessageMenu = function(event, messageId) {
+            event.stopPropagation();
+            // 메시지 메뉴 구현 (복사, 삭제 등)
+            const menu = confirm('이 메시지를 삭제하시겠습니까?');
+            if (menu) {
+                deleteMessage(messageId);
+            }
+        };
+
+        window.deleteMessage = async function(messageId) {
             try {
-                const messageDoc = await db.collection('chats').doc(roomId).collection('messages').doc(messageId).get();
-                if (messageDoc.exists) {
-                    const text = messageDoc.data().text;
-                    if (text) {
-                        navigator.clipboard.writeText(text);
-                        alert('메시지가 복사되었습니다.');
-                    }
+                const messageDocRef = doc(db, 'chats', chatId, 'messages', messageId);
+                await deleteDoc(messageDocRef);
+                console.log('✅ 메시지 삭제 완료');
+            } catch (error) {
+                console.error('❌ 메시지 삭제 실패:', error);
+                
+                if (error.code === 'permission-denied') {
+                    alert('메시지 삭제 권한이 없습니다.');
+                } else {
+                    alert('메시지 삭제에 실패했습니다.');
                 }
-            } catch (error) {
-                console.error("메시지 복사 실패:", error);
             }
-        }
+        };
 
-        async function deleteMessage(messageId) {
-            if (!confirm('이 메시지를 삭제하시겠습니까?')) return;
-            
-            try {
-                await db.collection('chats').doc(roomId).collection('messages').doc(messageId).delete();
-            } catch (error) {
-                console.error("메시지 삭제 실패:", error);
-            }
-        }
-
-        function muteChat() {
+        window.muteChat = function() {
             alert('알림이 꺼졌습니다.');
-            dropdownMenu.classList.remove('show');
-        }
+            document.getElementById('dropdownMenu').classList.remove('show');
+        };
 
-        function searchChat() {
+        window.searchChat = function() {
             alert('대화 검색 기능이 곧 제공될 예정입니다.');
-            dropdownMenu.classList.remove('show');
-        }
+            document.getElementById('dropdownMenu').classList.remove('show');
+        };
 
-        function leaveChat() {
+        window.leaveChat = function() {
             if (confirm('정말 채팅방을 나가시겠습니까? 나가면 대화 내용이 모두 삭제됩니다.')) {
-                // 실제로는 사용자를 participants 배열에서 제거하는 로직이 필요
                 alert('채팅방에서 나갔습니다.');
                 history.back();
             }
-            dropdownMenu.classList.remove('show');
-        }
+            document.getElementById('dropdownMenu').classList.remove('show');
+        };
 
-        function reportChat() {
+        window.reportChat = function() {
             alert('신고 기능이 곧 제공될 예정입니다.');
-            dropdownMenu.classList.remove('show');
-        }
+            document.getElementById('dropdownMenu').classList.remove('show');
+        };
 
-        // 13. 페이지 언로드 시 정리
+        // ============================================
+        // 12. 페이지 언로드 시 정리
+        // ============================================
         window.addEventListener('beforeunload', () => {
-            // 필요한 정리 작업 수행
-            if (currentUser && roomId) {
-                // 읽음 상태 업데이트 등
+            if (unsubscribeMessages) {
+                unsubscribeMessages();
             }
         });
     </script>
