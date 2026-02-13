@@ -622,9 +622,9 @@
                 
                 if (!existingChats.empty) {
                     const chatId = existingChats.docs[0].id;
-                    window.location.href = `chat.html?id=${chatId}`;
+                    window.location.href = `chat-room.html?id=${chatId}`;
                 } else {
-                    // 새 채팅방 생성
+                    // 새 채팅방 생성 - participants 배열 포함 (chat-room.html에서 필요)
                     const newChat = await addDoc(collection(db, 'chats'), {
                         productId: productId,
                         productTitle: currentProduct.title,
@@ -632,18 +632,23 @@
                         productPrice: currentProduct.price,
                         sellerId: currentProduct.sellerId,
                         buyerId: currentUser.uid,
+                        participants: [currentUser.uid, currentProduct.sellerId],
                         createdAt: serverTimestamp(),
                         lastMessage: '',
                         lastMessageTime: serverTimestamp(),
                         unreadCount: { [currentProduct.sellerId]: 0, [currentUser.uid]: 0 }
                     });
                     
-                    // 상품의 채팅 수 증가
-                    await updateDoc(doc(db, 'products', productId), {
-                        chatCount: increment(1)
-                    });
+                    // 상품의 채팅 수 증가 (별도 try-catch로 실패해도 채팅은 이동)
+                    try {
+                        await updateDoc(doc(db, 'products', productId), {
+                            chatCount: increment(1)
+                        });
+                    } catch (countErr) {
+                        console.warn('채팅 카운트 업데이트 실패 (무시됨):', countErr);
+                    }
                     
-                    window.location.href = `chat.html?id=${newChat.id}`;
+                    window.location.href = `chat-room.html?id=${newChat.id}`;
                 }
             } catch (error) {
                 console.error('❌ 채팅 시작 오류:', error);
