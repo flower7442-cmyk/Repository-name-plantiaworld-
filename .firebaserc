@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "plantiaworld"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

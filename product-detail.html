@@ -176,89 +176,76 @@
                         if (!prevProduct || prevProduct.sellerId !== currentProduct.sellerId) {
                             console.log('👤 판매자 정보 로드 시작:', currentProduct.sellerId);
                             await loadSellerInfo(currentProduct.sellerId);
+                        }
+                        
+                        // 판매자의 다른 상품 로드
+                        if (!prevProduct || prevProduct.sellerId !== currentProduct.sellerId) {
                             await loadSellerOtherProducts(currentProduct.sellerId);
                         }
                         
-                        // 유사 상품 로드
+                        // 추천 상품 로드
                         if (!prevProduct) {
                             await loadSimilarProducts();
                         }
                         
-                        // 로딩 화면 숨김
-                        const loadingScreen = document.getElementById('loadingScreen');
-                        if (loadingScreen) {
-                            loadingScreen.classList.add('hidden');
-                        }
+                        // 소유자 권한 UI 업데이트
+                        updateOwnerActions();
+                        
+                        // 좋아요 버튼 업데이트
+                        updateLikeButton(currentProduct);
+                        
                     } else {
                         console.error('❌ 상품을 찾을 수 없습니다');
-                        showProductNotFound();
+                        alert('상품을 찾을 수 없습니다.');
+                        window.location.href = 'index.html';
                     }
-                }, (error) => {
-                    console.error('❌ 실시간 리스너 오류:', error);
-                    showProductNotFound();
                 });
-                
             } catch (error) {
                 console.error('❌ 상품 로드 오류:', error);
-                showProductNotFound();
+                alert('상품 정보를 불러오는데 실패했습니다.');
             }
         }
 
         // ========== UI 업데이트 ==========
         function updateProductUI(product) {
-            if (!product) return;
-            
             console.log('🎨 UI 업데이트 시작');
             
-            // 제목과 설명
+            // 상품명
             const titleEl = document.getElementById('productTitle');
-            const descEl = document.getElementById('productDescription');
-            const categoryEl = document.getElementById('productCategory');
-            const dateEl = document.getElementById('productDate');
-            
             if (titleEl) titleEl.textContent = product.title || '제목 없음';
-            if (descEl) descEl.textContent = product.description || '상품 설명이 없습니다.';
-            if (categoryEl) categoryEl.textContent = product.category || '기타';
-            if (dateEl) dateEl.textContent = formatDate(product.createdAt || product.createdDate);
             
             // 가격
             const priceEl = document.getElementById('productPrice');
-            const priceInfoEl = document.getElementById('priceInfo');
-            const price = product.price || 0;
+            if (priceEl) priceEl.textContent = product.price ? `${parseInt(product.price).toLocaleString()}원` : '가격 미정';
             
-            if (priceEl && priceInfoEl) {
-                if (price === 0) {
-                    priceEl.textContent = '나눔 🌱';
-                    priceEl.className = 'text-2xl font-bold text-green-600';
-                    priceInfoEl.textContent = '무료 나눔';
-                } else {
-                    priceEl.textContent = price.toLocaleString() + '원';
-                    priceEl.className = 'text-2xl font-bold text-gray-900';
-                    priceInfoEl.textContent = '가격 협의 가능';
-                }
+            // 상태
+            const statusEl = document.getElementById('productStatus');
+            if (statusEl) {
+                const statusInfo = {
+                    '판매중': { text: '판매중', class: 'bg-blue-100 text-blue-700' },
+                    '예약중': { text: '예약중', class: 'bg-orange-100 text-orange-700' },
+                    '판매완료': { text: '판매완료', class: 'bg-red-100 text-red-700' }
+                };
+                const status = statusInfo[product.status] || statusInfo['판매중'];
+                statusEl.innerHTML = `<span class="px-3 py-1 rounded-full text-sm font-bold ${status.class}">${status.text}</span>`;
             }
             
-            // 상태 배지
-            const statusBadge = document.getElementById('statusBadge');
-            if (statusBadge) {
-                const status = product.status || '판매중';
-                statusBadge.textContent = status;
-                
-                let badgeClass = 'px-3 py-1 rounded-full text-sm font-bold ';
-                switch(status) {
-                    case '판매중':
-                        badgeClass += 'bg-blue-100 text-blue-800';
-                        break;
-                    case '예약중':
-                        badgeClass += 'bg-orange-100 text-orange-800';
-                        break;
-                    case '판매완료':
-                        badgeClass += 'bg-red-100 text-red-800';
-                        break;
-                    default:
-                        badgeClass += 'bg-gray-100 text-gray-800';
-                }
-                statusBadge.className = badgeClass;
+            // 카테고리
+            const categoryEl = document.getElementById('productCategory');
+            if (categoryEl) categoryEl.textContent = product.category || '기타';
+            
+            // 날짜
+            const dateEl = document.getElementById('productDate');
+            if (dateEl) dateEl.textContent = formatDate(product.createdAt);
+            
+            // 위치
+            const locationEl = document.getElementById('productLocation');
+            if (locationEl) locationEl.textContent = product.location || '위치 정보 없음';
+            
+            // 설명
+            const descEl = document.getElementById('productDescription');
+            if (descEl) {
+                descEl.textContent = product.description || '설명이 없습니다.';
             }
             
             // 통계
@@ -266,375 +253,339 @@
             const likeCountEl = document.getElementById('likeCount');
             const chatCountEl = document.getElementById('chatCount');
             
-            if (viewCountEl) viewCountEl.textContent = (product.views || 0).toLocaleString();
-            if (likeCountEl) likeCountEl.textContent = (product.likes?.length || 0).toLocaleString();
-            if (chatCountEl) chatCountEl.textContent = (product.chatCount || 0).toLocaleString();
+            if (viewCountEl) viewCountEl.textContent = product.views || 0;
+            if (likeCountEl) likeCountEl.textContent = product.likeCount || 0;
+            if (chatCountEl) chatCountEl.textContent = product.chatCount || 0;
             
-            // 위치 정보
-            const locationEl = document.getElementById('productLocation');
-            if (locationEl) {
-                const location = product.sellerLocation || product.location?.address || product.location || '위치 정보 없음';
-                locationEl.textContent = typeof location === 'string' ? location : '위치 정보 없음';
-            }
+            // 이미지 갤러리
+            updateGallery(product.images || []);
             
-            // 이미지 슬라이더
-            updateImageSlider(product.images || []);
-            
-            // 소유자 액션
-            updateOwnerActions();
-            
-            // 좋아요 버튼
-            updateLikeButton(product);
-            
-            // 지도 표시 (다양한 필드명 지원)
-            const tradeLocation = product.tradeLocation || product.location;
-            if (tradeLocation) {
-                const lat = tradeLocation.lat || tradeLocation.latitude;
-                const lng = tradeLocation.lng || tradeLocation.longitude;
-                
-                if (lat && lng) {
-                    console.log('🗺️ 지도 표시:', { lat, lng });
-                    setTimeout(() => initializeMap({ lat, lng, address: tradeLocation.address }), 300);
-                } else {
-                    console.log('⚠️ 지도 좌표 없음');
-                    const mapContainer = document.getElementById('mapContainer');
-                    if (mapContainer) mapContainer.classList.add('hidden');
-                }
-            } else {
-                const mapContainer = document.getElementById('mapContainer');
-                if (mapContainer) mapContainer.classList.add('hidden');
+            // 지도
+            if (product.tradeLocation) {
+                updateMap(product.tradeLocation);
             }
             
             console.log('✅ UI 업데이트 완료');
         }
 
-        // ========== 이미지 슬라이더 업데이트 ==========
-        function updateImageSlider(images) {
-            const container = document.getElementById('imageSlider');
-            const indicators = document.getElementById('indicators');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
+        // ========== 이미지 갤러리 업데이트 ==========
+        function updateGallery(images) {
+            const slider = document.getElementById('imageSlider');
+            const indicators = document.getElementById('slideIndicators');
             
-            if (!container) return;
-            
-            currentSlideIndex = 0;
+            if (!slider || !indicators) return;
             
             if (!images || images.length === 0) {
-                container.innerHTML = `
+                slider.innerHTML = `
                     <div class="w-full h-full flex items-center justify-center bg-gray-100">
-                        <i class="fas fa-leaf text-6xl text-gray-300"></i>
+                        <div class="text-center">
+                            <i class="fas fa-image text-gray-300 text-6xl mb-4"></i>
+                            <p class="text-gray-400">이미지가 없습니다</p>
+                        </div>
                     </div>
                 `;
-                if (indicators) indicators.innerHTML = '';
-                if (prevBtn) prevBtn.style.display = 'none';
-                if (nextBtn) nextBtn.style.display = 'none';
+                indicators.innerHTML = '';
+                document.getElementById('prevSlide').style.display = 'none';
+                document.getElementById('nextSlide').style.display = 'none';
                 return;
             }
             
-            container.innerHTML = images.map((img, idx) => `
-                <div class="slide ${idx === 0 ? 'active' : ''}" style="background-image: url('${escapeHtml(img)}')"></div>
+            // 슬라이더 이미지
+            slider.innerHTML = images.map(url => `
+                <img src="${url}" alt="상품 이미지" class="w-full h-full object-contain">
             `).join('');
             
-            if (indicators) {
-                indicators.innerHTML = images.map((_, idx) => `
-                    <span class="indicator ${idx === 0 ? 'active' : ''}" onclick="goToSlide(${idx})"></span>
-                `).join('');
+            // 인디케이터
+            indicators.innerHTML = images.map((_, index) => `
+                <div class="indicator ${index === 0 ? 'active' : ''}" onclick="goToSlide(${index})"></div>
+            `).join('');
+            
+            // 네비게이션 버튼 표시
+            if (images.length > 1) {
+                document.getElementById('prevSlide').style.display = 'flex';
+                document.getElementById('nextSlide').style.display = 'flex';
+            } else {
+                document.getElementById('prevSlide').style.display = 'none';
+                document.getElementById('nextSlide').style.display = 'none';
             }
             
-            if (prevBtn) prevBtn.style.display = images.length > 1 ? 'flex' : 'none';
-            if (nextBtn) nextBtn.style.display = images.length > 1 ? 'flex' : 'none';
-            
-            console.log('📷 이미지 슬라이더 업데이트:', images.length, '개');
+            currentSlideIndex = 0;
         }
 
-        // ========== 슬라이더 네비게이션 ==========
-        window.prevSlide = function() {
-            const slides = document.querySelectorAll('.slide');
+        // ========== 슬라이드 이동 ==========
+        window.goToSlide = function(index) {
+            if (!currentProduct || !currentProduct.images) return;
+            
+            const images = currentProduct.images;
+            const slider = document.getElementById('imageSlider');
             const indicators = document.querySelectorAll('.indicator');
-            if (slides.length === 0) return;
             
-            currentSlideIndex = (currentSlideIndex - 1 + slides.length) % slides.length;
+            currentSlideIndex = index;
+            slider.style.transform = `translateX(-${index * 100}%)`;
             
-            slides.forEach((slide, idx) => {
-                slide.classList.toggle('active', idx === currentSlideIndex);
-            });
-            indicators.forEach((ind, idx) => {
-                ind.classList.toggle('active', idx === currentSlideIndex);
+            indicators.forEach((ind, i) => {
+                ind.classList.toggle('active', i === index);
             });
         };
 
         window.nextSlide = function() {
-            const slides = document.querySelectorAll('.slide');
-            const indicators = document.querySelectorAll('.indicator');
-            if (slides.length === 0) return;
-            
-            currentSlideIndex = (currentSlideIndex + 1) % slides.length;
-            
-            slides.forEach((slide, idx) => {
-                slide.classList.toggle('active', idx === currentSlideIndex);
-            });
-            indicators.forEach((ind, idx) => {
-                ind.classList.toggle('active', idx === currentSlideIndex);
-            });
+            if (!currentProduct || !currentProduct.images) return;
+            const images = currentProduct.images;
+            const nextIndex = (currentSlideIndex + 1) % images.length;
+            goToSlide(nextIndex);
         };
 
-        window.goToSlide = function(index) {
-            const slides = document.querySelectorAll('.slide');
-            const indicators = document.querySelectorAll('.indicator');
-            
-            currentSlideIndex = index;
-            
-            slides.forEach((slide, idx) => {
-                slide.classList.toggle('active', idx === currentSlideIndex);
-            });
-            indicators.forEach((ind, idx) => {
-                ind.classList.toggle('active', idx === currentSlideIndex);
-            });
+        window.prevSlide = function() {
+            if (!currentProduct || !currentProduct.images) return;
+            const images = currentProduct.images;
+            const prevIndex = (currentSlideIndex - 1 + images.length) % images.length;
+            goToSlide(prevIndex);
         };
 
-        // ========== 판매자 정보 로드 (개선됨) ==========
-        async function loadSellerInfo(sellerId) {
-            console.log('👤 판매자 정보 로드:', sellerId);
+        // ========== 지도 업데이트 ==========
+        function updateMap(location) {
+            const mapContainer = document.getElementById('mapContainer');
+            const mapEl = document.getElementById('tradeMap');
             
-            const sellerNameEl = document.getElementById('sellerName');
-            const sellerAvatarEl = document.getElementById('sellerAvatar');
-            const sellerJoinDateEl = document.getElementById('sellerJoinDate');
-            
-            if (!sellerId) {
-                console.warn('⚠️ 판매자 ID 없음');
-                if (sellerNameEl) sellerNameEl.textContent = '알 수 없는 판매자';
-                if (sellerAvatarEl) sellerAvatarEl.src = 'https://via.placeholder.com/50?text=?';
-                if (sellerJoinDateEl) sellerJoinDateEl.textContent = '-';
+            if (!location || !location.lat || !location.lng) {
+                if (mapContainer) mapContainer.classList.add('hidden');
                 return;
             }
             
-            try {
-                const userRef = doc(db, 'users', sellerId);
-                const userSnap = await getDoc(userRef);
+            if (mapContainer) mapContainer.classList.remove('hidden');
+            
+            if (!map) {
+                map = L.map('tradeMap').setView([location.lat, location.lng], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
                 
-                if (userSnap.exists()) {
-                    const seller = userSnap.data();
-                    console.log('✅ 판매자 정보 로드 성공:', seller);
-                    
-                    if (sellerNameEl) {
-                        sellerNameEl.textContent = seller.displayName || seller.nickname || seller.name || '사용자';
+                mapMarker = L.marker([location.lat, location.lng]).addTo(map);
+                if (location.address) {
+                    mapMarker.bindPopup(location.address).openPopup();
+                }
+            } else {
+                map.setView([location.lat, location.lng], 15);
+                if (mapMarker) {
+                    mapMarker.setLatLng([location.lat, location.lng]);
+                    if (location.address) {
+                        mapMarker.bindPopup(location.address).openPopup();
                     }
+                }
+            }
+            
+            setTimeout(() => {
+                if (map) map.invalidateSize();
+            }, 100);
+        }
+
+        // ========== 판매자 정보 로드 ==========
+        async function loadSellerInfo(sellerId) {
+            try {
+                const sellerDoc = await getDoc(doc(db, 'users', sellerId));
+                
+                if (sellerDoc.exists()) {
+                    const seller = sellerDoc.data();
+                    console.log('✅ 판매자 정보:', seller);
                     
-                    if (sellerAvatarEl) {
-                        sellerAvatarEl.src = seller.photoURL || 'https://via.placeholder.com/50?text=' + (seller.displayName?.[0] || '?');
-                        sellerAvatarEl.onerror = () => {
-                            sellerAvatarEl.src = 'https://via.placeholder.com/50?text=?';
+                    const avatarEl = document.getElementById('sellerAvatar');
+                    const nameEl = document.getElementById('sellerName');
+                    const joinDateEl = document.getElementById('sellerJoinDate');
+                    
+                    if (avatarEl) {
+                        avatarEl.src = seller.photoURL || 'https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839';
+                        avatarEl.onerror = function() {
+                            this.src = 'https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839';
                         };
                     }
-                    
-                    if (sellerJoinDateEl) {
-                        const joinDate = seller.createdAt 
-                            ? new Date(seller.createdAt.seconds * 1000).toLocaleDateString('ko-KR')
-                            : '-';
-                        sellerJoinDateEl.textContent = joinDate;
+                    if (nameEl) nameEl.textContent = seller.displayName || '익명';
+                    if (joinDateEl) {
+                        const joinDate = seller.createdAt ? new Date(seller.createdAt.seconds * 1000) : new Date();
+                        joinDateEl.textContent = joinDate.toLocaleDateString('ko-KR');
                     }
                 } else {
-                    console.warn('⚠️ 판매자 정보 없음 (탈퇴한 사용자일 수 있음)');
-                    if (sellerNameEl) sellerNameEl.textContent = '탈퇴한 사용자';
-                    if (sellerAvatarEl) sellerAvatarEl.src = 'https://via.placeholder.com/50?text=X';
-                    if (sellerJoinDateEl) sellerJoinDateEl.textContent = '-';
+                    console.warn('⚠️ 판매자 정보 없음');
                 }
             } catch (error) {
                 console.error('❌ 판매자 정보 로드 오류:', error);
-                if (sellerNameEl) sellerNameEl.textContent = '정보를 불러올 수 없음';
-                if (sellerAvatarEl) sellerAvatarEl.src = 'https://via.placeholder.com/50?text=!';
-                if (sellerJoinDateEl) sellerJoinDateEl.textContent = '-';
             }
         }
 
-        // ========== 판매자 다른 상품 로드 ==========
+        // ========== 판매자의 다른 상품 로드 ==========
         async function loadSellerOtherProducts(sellerId) {
             const container = document.getElementById('sellerOtherProducts');
-            if (!container || !sellerId) return;
-            
-            container.innerHTML = '<p class="col-span-full text-center text-gray-500">로딩 중...</p>';
+            if (!container) return;
             
             try {
                 const q = query(
                     collection(db, 'products'),
                     where('sellerId', '==', sellerId),
-                    where('status', '==', '판매중'),
-                    limit(5)
+                    where('__name__', '!=', productId),
+                    limit(4)
                 );
                 
                 const snapshot = await getDocs(q);
-                const products = snapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(p => p.id !== productId);
                 
-                if (products.length === 0) {
-                    container.innerHTML = '<p class="col-span-full text-center text-gray-500">등록된 상품이 없습니다</p>';
+                if (snapshot.empty) {
+                    container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">다른 상품이 없습니다</p>';
                     return;
                 }
                 
-                container.innerHTML = products.map(product => {
-                    const image = product.images?.[0] || 'https://via.placeholder.com/200?text=No+Image';
-                    const price = product.price === 0 ? '나눔 🌱' : `${product.price.toLocaleString()}원`;
-                    const title = product.title || '제목 없음';
-                    const location = product.sellerLocation || product.location?.address || '지역 정보 없음';
+                container.innerHTML = snapshot.docs.map(doc => {
+                    const product = doc.data();
+                    const firstImage = product.images && product.images[0] 
+                        ? product.images[0] 
+                        : 'https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839';
                     
                     return `
-                        <a href="product-detail.html?id=${product.id}" class="product-card">
-                            <div class="product-image" style="background-image: url('${escapeHtml(image)}')"></div>
-                            <div class="p-3">
-                                <h4 class="font-bold text-gray-800 mb-1 truncate">${escapeHtml(title)}</h4>
-                                <p class="text-green-600 font-bold">${price}</p>
-                                <p class="text-xs text-gray-500 mt-1">${escapeHtml(typeof location === 'string' ? location : '위치 정보 없음')}</p>
+                        <a href="product-detail.html?id=${doc.id}" class="group block">
+                            <div class="glass-card rounded-xl overflow-hidden hover:shadow-lg transition">
+                                <div class="aspect-square overflow-hidden bg-gray-100">
+                                    <img src="${firstImage}" 
+                                         alt="${product.title || '상품'}"
+                                         class="w-full h-full object-cover group-hover:scale-105 transition"
+                                         onerror="this.src='https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839'">
+                                </div>
+                                <div class="p-3">
+                                    <p class="font-bold text-gray-800 truncate">${product.title || '제목 없음'}</p>
+                                    <p class="text-green-600 font-bold">${product.price ? parseInt(product.price).toLocaleString() + '원' : '가격 미정'}</p>
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                        <span><i class="fas fa-eye"></i> ${product.views || 0}</span>
+                                        <span><i class="fas fa-heart"></i> ${product.likeCount || 0}</span>
+                                    </div>
+                                </div>
                             </div>
                         </a>
                     `;
                 }).join('');
                 
-                console.log('✅ 판매자 상품 로드 완료:', products.length, '개');
             } catch (error) {
-                console.error('❌ 판매자 상품 로드 오류:', error);
-                container.innerHTML = '<p class="col-span-full text-center text-red-500">로드 실패</p>';
+                console.error('❌ 판매자 다른 상품 로드 오류:', error);
+                container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">상품을 불러오는데 실패했습니다</p>';
             }
         }
 
-        // ========== 유사 상품 로드 ==========
+        // ========== 추천 상품 로드 ==========
         async function loadSimilarProducts() {
             const container = document.getElementById('similarProducts');
             if (!container) return;
             
-            container.innerHTML = '<p class="col-span-full text-center text-gray-500">로딩 중...</p>';
-            
             try {
-                const q = query(
-                    collection(db, 'products'),
-                    where('category', '==', currentProduct.category || '기타'),
-                    where('status', '==', '판매중'),
-                    limit(9)
-                );
+                let q;
+                if (currentProduct.category) {
+                    q = query(
+                        collection(db, 'products'),
+                        where('category', '==', currentProduct.category),
+                        where('__name__', '!=', productId),
+                        limit(4)
+                    );
+                } else {
+                    q = query(
+                        collection(db, 'products'),
+                        where('__name__', '!=', productId),
+                        limit(4)
+                    );
+                }
                 
                 const snapshot = await getDocs(q);
-                const products = snapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(p => p.id !== productId);
                 
-                if (products.length === 0) {
-                    container.innerHTML = '<p class="col-span-full text-center text-gray-500">추천 상품이 없습니다</p>';
+                if (snapshot.empty) {
+                    container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">추천 상품이 없습니다</p>';
                     return;
                 }
                 
-                container.innerHTML = products.slice(0, 8).map(product => {
-                    const image = product.images?.[0] || 'https://via.placeholder.com/200?text=No+Image';
-                    const price = product.price === 0 ? '나눔 🌱' : `${product.price.toLocaleString()}원`;
-                    const title = product.title || '제목 없음';
-                    const location = product.sellerLocation || product.location?.address || '지역 정보 없음';
+                container.innerHTML = snapshot.docs.map(doc => {
+                    const product = doc.data();
+                    const firstImage = product.images && product.images[0] 
+                        ? product.images[0] 
+                        : 'https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839';
                     
                     return `
-                        <a href="product-detail.html?id=${product.id}" class="product-card">
-                            <div class="product-image" style="background-image: url('${escapeHtml(image)}')"></div>
-                            <div class="p-3">
-                                <h4 class="font-bold text-gray-800 mb-1 truncate">${escapeHtml(title)}</h4>
-                                <p class="text-green-600 font-bold">${price}</p>
-                                <p class="text-xs text-gray-500 mt-1">${escapeHtml(typeof location === 'string' ? location : '위치 정보 없음')}</p>
+                        <a href="product-detail.html?id=${doc.id}" class="group block">
+                            <div class="glass-card rounded-xl overflow-hidden hover:shadow-lg transition">
+                                <div class="aspect-square overflow-hidden bg-gray-100">
+                                    <img src="${firstImage}" 
+                                         alt="${product.title || '상품'}"
+                                         class="w-full h-full object-cover group-hover:scale-105 transition"
+                                         onerror="this.src='https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839'">
+                                </div>
+                                <div class="p-3">
+                                    <p class="font-bold text-gray-800 truncate">${product.title || '제목 없음'}</p>
+                                    <p class="text-green-600 font-bold">${product.price ? parseInt(product.price).toLocaleString() + '원' : '가격 미정'}</p>
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                        <span><i class="fas fa-eye"></i> ${product.views || 0}</span>
+                                        <span><i class="fas fa-heart"></i> ${product.likeCount || 0}</span>
+                                    </div>
+                                </div>
                             </div>
                         </a>
                     `;
                 }).join('');
                 
-                console.log('✅ 유사 상품 로드 완료:', products.length, '개');
             } catch (error) {
-                console.error('❌ 유사 상품 로드 오류:', error);
-                container.innerHTML = '<p class="col-span-full text-center text-red-500">로드 실패</p>';
+                console.error('❌ 추천 상품 로드 오류:', error);
+                container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">추천 상품을 불러오는데 실패했습니다</p>';
             }
         }
 
-        // ========== 지도 초기화 ==========
-        function initializeMap(location) {
-            if (!location || !location.lat || !location.lng) {
-                console.warn('⚠️ 지도 좌표 없음');
-                return;
-            }
+        // ========== 소유자 권한 업데이트 ==========
+        function updateOwnerActions() {
+            const buyerActions = document.getElementById('buyerActions');
+            const ownerActions = document.getElementById('ownerActions');
             
-            try {
-                const mapContainer = document.getElementById('mapContainer');
-                const mapDiv = document.getElementById('tradeMap');
-                
-                if (!mapContainer || !mapDiv) {
-                    console.warn('⚠️ 지도 엘리먼트 없음');
-                    return;
-                }
-                
-                mapContainer.classList.remove('hidden');
-                
-                if (!map) {
-                    console.log('🗺️ 지도 최초 생성');
-                    map = L.map('tradeMap').setView([location.lat, location.lng], 15);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors'
-                    }).addTo(map);
-                } else {
-                    console.log('🗺️ 지도 위치 업데이트');
-                    map.setView([location.lat, location.lng], 15);
-                }
-                
-                // 기존 마커 제거
-                if (mapMarker) {
-                    map.removeLayer(mapMarker);
-                }
-                
-                // 새 마커 추가
-                mapMarker = L.marker([location.lat, location.lng]).addTo(map)
-                    .bindPopup(escapeHtml(location.address || '거래 희망 장소'))
-                    .openPopup();
-                
-                // 지도 크기 재조정
-                setTimeout(() => {
-                    if (map) map.invalidateSize();
-                }, 100);
-                
-                console.log('✅ 지도 초기화 완료');
-            } catch (error) {
-                console.error('❌ 지도 초기화 오류:', error);
+            if (currentUser && currentProduct && currentUser.uid === currentProduct.sellerId) {
+                if (buyerActions) buyerActions.classList.add('hidden');
+                if (ownerActions) ownerActions.classList.remove('hidden');
+            } else {
+                if (buyerActions) buyerActions.classList.remove('hidden');
+                if (ownerActions) ownerActions.classList.add('hidden');
             }
         }
 
-        // ========== 좋아요 기능 ==========
+        // ========== 좋아요 버튼 업데이트 ==========
         function updateLikeButton(product) {
+            const likeBtn = document.getElementById('likeBtn');
             const likeIcon = document.getElementById('likeIcon');
-            if (!likeIcon || !product) return;
             
-            const isLiked = currentUser && product.likes?.includes(currentUser.uid);
-            likeIcon.className = isLiked 
-                ? 'fas fa-heart text-red-500 text-xl' 
-                : 'far fa-heart text-gray-600 text-xl';
+            if (!likeBtn || !likeIcon) return;
+            
+            const isLiked = currentUser && product.likedBy && product.likedBy.includes(currentUser.uid);
+            
+            if (isLiked) {
+                likeIcon.classList.remove('far');
+                likeIcon.classList.add('fas', 'text-red-500');
+            } else {
+                likeIcon.classList.remove('fas', 'text-red-500');
+                likeIcon.classList.add('far', 'text-gray-600');
+            }
         }
 
+        // ========== 좋아요 토글 ==========
         window.toggleLike = async function() {
             if (!currentUser) {
-                if (confirm('로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?')) {
-                    window.location.href = 'login.html';
-                }
+                alert('로그인이 필요합니다.');
+                window.location.href = 'login.html';
                 return;
             }
             
-            if (!currentProduct) {
-                showToast('상품 정보를 불러올 수 없습니다', 'error');
-                return;
-            }
+            if (!currentProduct) return;
             
             try {
                 const productRef = doc(db, 'products', productId);
-                const isLiked = currentProduct.likes?.includes(currentUser.uid);
+                const isLiked = currentProduct.likedBy && currentProduct.likedBy.includes(currentUser.uid);
                 
                 if (isLiked) {
                     await updateDoc(productRef, {
-                        likes: arrayRemove(currentUser.uid)
+                        likedBy: arrayRemove(currentUser.uid),
+                        likeCount: increment(-1)
                     });
-                    showToast('관심 목록에서 제거했습니다');
+                    showToast('좋아요 취소');
                 } else {
                     await updateDoc(productRef, {
-                        likes: arrayUnion(currentUser.uid)
+                        likedBy: arrayUnion(currentUser.uid),
+                        likeCount: increment(1)
                     });
-                    showToast('관심 목록에 추가했습니다');
+                    showToast('좋아요!');
                 }
             } catch (error) {
                 console.error('❌ 좋아요 오류:', error);
@@ -642,231 +593,180 @@
             }
         };
 
-        // ========== 소유자 액션 업데이트 ==========
-        function updateOwnerActions() {
-            const buyerActions = document.getElementById('buyerActions');
-            const ownerActions = document.getElementById('ownerActions');
-            
-            if (!buyerActions || !ownerActions || !currentProduct) return;
-            
-            const isOwner = currentUser && currentUser.uid === currentProduct.sellerId;
-            
-            if (isOwner) {
-                buyerActions.classList.add('hidden');
-                ownerActions.classList.remove('hidden');
-                console.log('👤 소유자 모드');
-            } else {
-                buyerActions.classList.remove('hidden');
-                ownerActions.classList.add('hidden');
-                console.log('👥 구매자 모드');
-            }
-        }
-
-        // ========== 채팅 시작 ==========
+        // ========== 채팅하기 ==========
         window.handleChatClick = async function() {
             if (!currentUser) {
-                if (confirm('로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?')) {
-                    window.location.href = 'login.html';
-                }
+                alert('로그인이 필요합니다.');
+                window.location.href = 'login.html';
                 return;
             }
             
-            if (!currentProduct) {
-                showToast('상품 정보를 불러올 수 없습니다', 'error');
-                return;
-            }
+            if (!currentProduct) return;
             
             if (currentUser.uid === currentProduct.sellerId) {
-                showToast('본인의 상품입니다', 'error');
+                alert('본인 상품입니다.');
                 return;
             }
             
             try {
-                showToast('채팅방을 준비 중입니다...', 'success');
+                // 기존 채팅방 확인
+                const chatsRef = collection(db, 'chats');
+                const q = query(
+                    chatsRef,
+                    where('productId', '==', productId),
+                    where('buyerId', '==', currentUser.uid),
+                    where('sellerId', '==', currentProduct.sellerId)
+                );
                 
-                const chatId = [currentUser.uid, currentProduct.sellerId].sort().join('_');
-                const chatRef = doc(db, 'chats', chatId);
-                const chatSnap = await getDoc(chatRef);
+                const existingChats = await getDocs(q);
                 
-                if (!chatSnap.exists()) {
-                    const chatData = {
-                        participants: [currentUser.uid, currentProduct.sellerId],
-                        buyerId: currentUser.uid,
+                if (!existingChats.empty) {
+                    const chatId = existingChats.docs[0].id;
+                    window.location.href = `chat-room.html?id=${chatId}`;
+                } else {
+                    // 새 채팅방 생성 - participants 배열 포함 (chat-room.html에서 필요)
+                    const newChat = await addDoc(collection(db, 'chats'), {
+                        productId: productId,
+                        productTitle: currentProduct.title,
+                        productImage: currentProduct.images && currentProduct.images[0] ? currentProduct.images[0] : null,
+                        productPrice: currentProduct.price,
                         sellerId: currentProduct.sellerId,
-                        productId: currentProduct.id,
-                        productTitle: currentProduct.title || '제목 없음',
-                        productImage: currentProduct.images?.[0] || '',
-                        productPrice: currentProduct.price || 0,
+                        buyerId: currentUser.uid,
+                        participants: [currentUser.uid, currentProduct.sellerId],
+                        createdAt: serverTimestamp(),
                         lastMessage: '',
                         lastMessageTime: serverTimestamp(),
-                        unreadCount: {
-                            [currentUser.uid]: 0,
-                            [currentProduct.sellerId]: 0
-                        },
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp()
-                    };
-
-                    await setDoc(chatRef, chatData);
-                    console.log('✅ 새 채팅방 생성:', chatId);
+                        unreadCount: { [currentProduct.sellerId]: 0, [currentUser.uid]: 0 }
+                    });
                     
-                    // 채팅 수 증가
+                    // 상품의 채팅 수 증가 (별도 try-catch로 실패해도 채팅은 이동)
                     try {
-                        const productRef = doc(db, 'products', productId);
-                        await updateDoc(productRef, {
+                        await updateDoc(doc(db, 'products', productId), {
                             chatCount: increment(1)
                         });
-                    } catch (error) {
-                        console.error('채팅 수 증가 오류:', error);
+                    } catch (countErr) {
+                        console.warn('채팅 카운트 업데이트 실패 (무시됨):', countErr);
                     }
+                    
+                    window.location.href = `chat-room.html?id=${newChat.id}`;
                 }
-                
-                // 채팅 페이지로 이동 (올바른 파일명)
-                window.location.href = `chat.html?id=${chatId}`;
             } catch (error) {
                 console.error('❌ 채팅 시작 오류:', error);
-                showToast('채팅을 시작할 수 없습니다', 'error');
+                alert('채팅을 시작할 수 없습니다.');
             }
         };
 
-        // ========== 상품 수정 (개선됨) ==========
-        window.editProduct = function() {
-            if (!currentProduct || !currentUser) {
-                showToast('권한이 없습니다', 'error');
-                return;
-            }
-            
-            if (currentUser.uid !== currentProduct.sellerId) {
-                showToast('수정 권한이 없습니다', 'error');
-                return;
-            }
-            
-            console.log('✏️ 수정 페이지로 이동:', productId);
-            
-            // URL 파라미터로 상품 ID 전달 (upload.html에서 처리)
-            window.location.href = `upload.html?edit=${productId}`;
-        };
-
-        // ========== 상품 삭제 ==========
-        window.deleteProduct = async function() {
-            if (!currentProduct || !currentUser) {
-                showToast('권한이 없습니다', 'error');
-                return;
-            }
-            
-            if (currentUser.uid !== currentProduct.sellerId) {
-                showToast('삭제 권한이 없습니다', 'error');
-                return;
-            }
-            
-            if (!confirm('정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
-            
-            try {
-                await deleteDoc(doc(db, 'products', productId));
-                showToast('상품이 삭제되었습니다');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
-            } catch (error) {
-                console.error('❌ 삭제 오류:', error);
-                showToast('삭제에 실패했습니다', 'error');
-            }
-        };
-
-        // ========== 상태 변경 ==========
+        // ========== 상태 변경 모달 ==========
         window.openStatusModal = function() {
-            document.getElementById('statusModal').classList.remove('hidden');
+            const modal = document.getElementById('statusModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
         };
 
         window.closeStatusModal = function() {
-            document.getElementById('statusModal').classList.add('hidden');
+            const modal = document.getElementById('statusModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
         };
 
         window.changeStatus = async function(newStatus) {
-            if (!currentProduct) {
-                showToast('상품 정보를 불러올 수 없습니다', 'error');
-                return;
-            }
+            if (!currentProduct) return;
             
             try {
-                const productRef = doc(db, 'products', productId);
-                await updateDoc(productRef, {
-                    status: newStatus,
-                    updatedAt: serverTimestamp()
+                await updateDoc(doc(db, 'products', productId), {
+                    status: newStatus
                 });
                 
-                closeStatusModal();
                 showToast(`상태가 "${newStatus}"(으)로 변경되었습니다`);
+                closeStatusModal();
             } catch (error) {
                 console.error('❌ 상태 변경 오류:', error);
                 showToast('상태 변경에 실패했습니다', 'error');
             }
         };
 
-        // ========== 신고 기능 ==========
+        // ========== 상품 수정 ==========
+        window.editProduct = function() {
+            window.location.href = `add-product.html?id=${productId}`;
+        };
+
+        // ========== 상품 삭제 ==========
+        window.deleteProduct = async function() {
+            if (!confirm('정말 이 상품을 삭제하시겠습니까?')) return;
+            
+            try {
+                await deleteDoc(doc(db, 'products', productId));
+                alert('상품이 삭제되었습니다.');
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('❌ 삭제 오류:', error);
+                alert('삭제에 실패했습니다.');
+            }
+        };
+
+        // ========== 신고 모달 ==========
         window.openReportModal = function() {
             if (!currentUser) {
-                if (confirm('로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?')) {
-                    window.location.href = 'login.html';
-                }
+                alert('로그인이 필요합니다.');
                 return;
             }
-            
-            document.getElementById('reportReason').value = '';
-            document.getElementById('reportDetails').value = '';
-            document.getElementById('reportModal').classList.remove('hidden');
+            const modal = document.getElementById('reportModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
         };
 
         window.closeReportModal = function() {
-            document.getElementById('reportModal').classList.add('hidden');
+            const modal = document.getElementById('reportModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            document.getElementById('reportReason').value = '';
+            document.getElementById('reportDetails').value = '';
         };
 
         window.submitReport = async function() {
-            if (!currentUser || !currentProduct) {
-                showToast('정보를 불러올 수 없습니다', 'error');
-                return;
-            }
-            
             const reason = document.getElementById('reportReason').value;
-            const details = document.getElementById('reportDetails').value.trim();
+            const details = document.getElementById('reportDetails').value;
             
             if (!reason) {
-                showToast('신고 사유를 선택해주세요', 'error');
+                alert('신고 사유를 선택해주세요.');
                 return;
             }
             
-            if (!details) {
-                showToast('상세 내용을 입력해주세요', 'error');
+            if (!details.trim()) {
+                alert('상세 내용을 입력해주세요.');
                 return;
             }
             
             try {
                 await addDoc(collection(db, 'reports'), {
+                    type: 'product',
                     productId: productId,
-                    productTitle: currentProduct.title,
                     reporterId: currentUser.uid,
-                    sellerId: currentProduct.sellerId,
+                    reportedUserId: currentProduct.sellerId,
                     reason: reason,
                     details: details,
                     createdAt: serverTimestamp(),
                     status: 'pending'
                 });
                 
-                closeReportModal();
                 showToast('신고가 접수되었습니다');
+                closeReportModal();
             } catch (error) {
                 console.error('❌ 신고 오류:', error);
-                showToast('신고에 실패했습니다', 'error');
+                showToast('신고 접수에 실패했습니다', 'error');
             }
         };
 
         window.blockUser = async function() {
-            if (!currentUser || !currentProduct) {
-                showToast('정보를 불러올 수 없습니다', 'error');
-                return;
-            }
-            
-            if (!confirm('이 사용자의 게시글을 더 이상 보지 않으시겠습니까?')) return;
+            if (!confirm('이 사용자의 모든 게시글을 보지 않으시겠습니까?')) return;
             
             try {
                 const userRef = doc(db, 'users', currentUser.uid);
@@ -875,42 +775,24 @@
                 });
                 
                 showToast('사용자를 차단했습니다');
-                setTimeout(() => window.location.href = 'index.html', 1500);
+                closeReportModal();
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
             } catch (error) {
                 console.error('❌ 차단 오류:', error);
                 showToast('차단에 실패했습니다', 'error');
             }
         };
 
-        // ========== 상품을 찾을 수 없을 때 ==========
-        function showProductNotFound() {
-            const loadingScreen = document.getElementById('loadingScreen');
-            if (loadingScreen) {
-                loadingScreen.innerHTML = `
-                    <div class="text-center p-8">
-                        <i class="fas fa-exclamation-triangle text-6xl text-yellow-500 mb-4"></i>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-2">상품을 찾을 수 없습니다</h2>
-                        <p class="text-gray-600 mb-6">삭제되었거나 존재하지 않는 상품입니다</p>
-                        <button onclick="window.location.href='index.html'" 
-                                class="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition">
-                            메인으로 돌아가기
-                        </button>
-                    </div>
-                `;
-                loadingScreen.classList.remove('hidden');
-            }
-        }
-
         // ========== 뒤로가기 ==========
         window.goBack = function() {
-            if (window.history.length > 1) {
-                window.history.back();
-            } else {
-                window.location.href = 'index.html';
-            }
+            window.history.back();
         };
-    </script>
 
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -925,67 +807,53 @@
             padding-bottom: 100px;
         }
 
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        /* 로딩 화면 */
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+        /* 헤더 */
+        .header {
             background: rgba(255, 255, 255, 0.98);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 16px 0;
         }
 
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #e5e7eb;
-            border-top-color: #10b981;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* 이미지 슬라이더 */
-        .image-slider-container {
+        /* 이미지 갤러리 */
+        .image-gallery {
             position: relative;
             width: 100%;
-            height: 400px;
-            border-radius: 1rem;
+            aspect-ratio: 1;
             overflow: hidden;
-            background: #f3f4f6;
+            background: #f8f9fa;
+            border-radius: 16px;
         }
 
-        .slide {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .image-slider {
+            display: flex;
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+
+        .image-slider img {
+            flex-shrink: 0;
             width: 100%;
             height: 100%;
-            background-size: cover;
-            background-position: center;
-            opacity: 0;
-            transition: opacity 0.5s ease;
+            object-fit: contain;
         }
 
-        .slide.active {
-            opacity: 1;
-            z-index: 1;
-        }
-
-        .slider-btn {
+        .nav-button {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
@@ -994,28 +862,23 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 10;
+            cursor: pointer;
             transition: all 0.3s;
+            z-index: 10;
         }
 
-        .slider-btn:hover {
+        .nav-button:hover {
             background: white;
             transform: translateY(-50%) scale(1.1);
         }
 
-        .slider-btn.prev {
-            left: 10px;
-        }
+        .nav-button.prev { left: 10px; }
+        .nav-button.next { right: 10px; }
 
-        .slider-btn.next {
-            right: 10px;
-        }
-
-        .indicators {
+        .slide-indicators {
             position: absolute;
             bottom: 15px;
             left: 50%;
@@ -1026,8 +889,8 @@
         }
 
         .indicator {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.5);
             cursor: pointer;
@@ -1036,31 +899,16 @@
 
         .indicator.active {
             background: white;
-            width: 30px;
-            border-radius: 5px;
+            width: 24px;
+            border-radius: 4px;
         }
 
-        /* 상품 카드 */
-        .product-card {
-            display: block;
-            background: white;
+        /* 지도 */
+        #tradeMap {
+            width: 100%;
+            height: 300px;
             border-radius: 12px;
             overflow: hidden;
-            transition: all 0.3s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-        }
-
-        .product-image {
-            width: 100%;
-            padding-top: 100%;
-            background-size: cover;
-            background-position: center;
-            background-color: #f3f4f6;
         }
 
         /* 하단 고정 바 */
@@ -1070,23 +918,20 @@
             left: 0;
             right: 0;
             background: white;
-            padding: 15px 20px;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            z-index: 50;
         }
 
         /* 모달 */
         .modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
+            z-index: 200;
             padding: 20px;
         }
 
@@ -1099,158 +944,152 @@
             overflow-y: auto;
         }
 
-        /* 지도 */
-        #tradeMap {
-            height: 300px;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
         /* 토스트 */
         .toast {
             position: fixed;
-            bottom: 120px;
+            top: 80px;
             left: 50%;
             transform: translateX(-50%);
+            background: #10b981;
             color: white;
-            padding: 15px 25px;
+            padding: 12px 24px;
             border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            z-index: 3000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 300;
             display: flex;
             align-items: center;
-            animation: slideUp 0.3s ease;
-            min-width: 250px;
-            justify-content: center;
-        }
-
-        .toast-success {
-            background: #10b981;
+            animation: slideDown 0.3s ease;
         }
 
         .toast-error {
             background: #ef4444;
         }
 
-        @keyframes slideUp {
+        @keyframes slideDown {
             from {
-                transform: translate(-50%, 20px);
+                transform: translateX(-50%) translateY(-20px);
                 opacity: 0;
             }
             to {
-                transform: translate(-50%, 0);
+                transform: translateX(-50%) translateY(0);
                 opacity: 1;
             }
         }
 
         /* 반응형 */
         @media (max-width: 768px) {
-            .image-slider-container {
-                height: 300px;
+            .container {
+                padding: 12px;
             }
-            
-            body {
-                padding-bottom: 80px;
+
+            .nav-button {
+                width: 32px;
+                height: 32px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- 로딩 화면 -->
-    <div id="loadingScreen" class="loading-screen">
-        <div class="loading-spinner"></div>
-    </div>
-
-    <!-- 메인 컨텐츠 -->
-    <div class="container mx-auto max-w-4xl px-4 py-6">
-        <!-- 상단 헤더 -->
-        <div class="flex items-center justify-between mb-6">
-            <button onclick="goBack()" class="glass-card p-3 rounded-xl hover:bg-white/80 transition">
+    
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container mx-auto max-w-4xl flex items-center justify-between">
+            <button onclick="goBack()" class="p-2 hover:bg-gray-100 rounded-lg transition">
                 <i class="fas fa-arrow-left text-xl text-gray-700"></i>
             </button>
-            
-            <div class="flex gap-2">
-                <button onclick="window.location.href='index.html'" class="glass-card p-3 rounded-xl hover:bg-white/80 transition">
-                    <i class="fas fa-home text-xl text-gray-700"></i>
+            <h1 class="text-lg font-bold text-gray-800">상품 상세</h1>
+            <button onclick="openReportModal()" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                <i class="fas fa-ellipsis-v text-xl text-gray-700"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="container mx-auto max-w-4xl mt-4">
+        
+        <!-- 이미지 갤러리 -->
+        <div class="glass-card rounded-2xl overflow-hidden mb-4">
+            <div class="image-gallery">
+                <div id="imageSlider" class="image-slider">
+                    <div class="w-full h-full flex items-center justify-center bg-gray-100">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin text-gray-400 text-4xl mb-3"></i>
+                            <p class="text-gray-500">이미지 로딩 중...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="prevSlide" onclick="prevSlide()" class="nav-button prev" style="display: none;">
+                    <i class="fas fa-chevron-left text-gray-700"></i>
                 </button>
-                <button onclick="openReportModal()" class="glass-card p-3 rounded-xl hover:bg-white/80 transition">
-                    <i class="fas fa-flag text-xl text-gray-700"></i>
+                <button id="nextSlide" onclick="nextSlide()" class="nav-button next" style="display: none;">
+                    <i class="fas fa-chevron-right text-gray-700"></i>
                 </button>
+                
+                <div id="slideIndicators" class="slide-indicators"></div>
             </div>
         </div>
 
-        <!-- 상품 상세 카드 -->
-        <div class="glass-card rounded-2xl overflow-hidden mb-4">
-            <!-- 이미지 슬라이더 -->
-            <div class="image-slider-container">
-                <div id="imageSlider"></div>
-                <button id="prevBtn" class="slider-btn prev" onclick="prevSlide()" style="display: none;">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button id="nextBtn" class="slider-btn next" onclick="nextSlide()" style="display: none;">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-                <div id="indicators" class="indicators"></div>
-            </div>
-
-            <!-- 상품 정보 -->
-            <div class="p-6">
-                <!-- 제목 및 상태 -->
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h1 id="productTitle" class="text-2xl font-bold text-gray-900 mb-2">로딩중...</h1>
-                        <div class="flex items-center gap-2 text-sm text-gray-600">
-                            <span id="productCategory">카테고리</span>
+        <!-- 상품 정보 -->
+        <div class="glass-card rounded-2xl p-6 mb-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 좌측: 상품 기본 정보 -->
+                <div>
+                    <div class="mb-4">
+                        <div class="flex items-start justify-between mb-2">
+                            <h2 id="productTitle" class="text-2xl font-bold text-gray-900 flex-1">로딩 중...</h2>
+                            <div id="productStatus" class="ml-3"></div>
+                        </div>
+                        <p id="productPrice" class="text-3xl font-bold text-green-600 mb-2">-원</p>
+                        <div class="flex items-center gap-3 text-sm text-gray-600">
+                            <span><i class="fas fa-tag mr-1"></i><span id="productCategory">-</span></span>
                             <span>•</span>
-                            <span id="productDate">날짜</span>
+                            <span><i class="fas fa-clock mr-1"></i><span id="productDate">-</span></span>
                         </div>
                     </div>
-                    <span id="statusBadge" class="px-3 py-1 rounded-full text-sm font-bold bg-blue-100 text-blue-800">판매중</span>
-                </div>
 
-                <!-- 가격 -->
-                <div class="bg-green-50 rounded-xl p-4 mb-4">
-                    <p id="productPrice" class="text-2xl font-bold text-gray-900">0원</p>
-                    <p id="priceInfo" class="text-sm text-gray-600 mt-1">가격 협의 가능</p>
-                </div>
-
-                <!-- 상품 설명 -->
-                <div class="mb-6">
-                    <h3 class="font-bold text-gray-800 mb-2">상품 설명</h3>
-                    <p id="productDescription" class="text-gray-700 whitespace-pre-wrap leading-relaxed">설명 로딩중...</p>
-                </div>
-
-                <!-- 상품 통계 -->
-                <div class="flex items-center gap-6 text-sm text-gray-600 mb-6">
-                    <div class="flex items-center gap-1">
-                        <i class="fas fa-eye"></i>
-                        <span id="viewCount">0</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <i class="fas fa-heart"></i>
-                        <span id="likeCount">0</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <i class="fas fa-comment"></i>
-                        <span id="chatCount">0</span>
+                    <div class="border-t pt-4 mb-4">
+                        <h3 class="font-bold text-gray-800 mb-2">상품 설명</h3>
+                        <p id="productDescription" class="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                            로딩 중...
+                        </p>
                     </div>
                 </div>
 
-                <!-- 판매자 정보 -->
-                <div class="border-t pt-4">
-                    <h3 class="font-bold text-gray-800 mb-3">판매자 정보</h3>
-                    <div class="flex items-center gap-3">
-                        <img id="sellerAvatar" src="https://via.placeholder.com/50?text=?" alt="판매자" 
-                             class="w-12 h-12 rounded-full object-cover border-2 border-gray-200">
-                        <div>
-                            <p id="sellerName" class="font-bold text-gray-900">로딩중...</p>
-                            <p class="text-sm text-gray-600">
-                                <i class="fas fa-map-marker-alt mr-1"></i>
-                                <span id="productLocation">위치</span>
-                            </p>
-                            <p class="text-xs text-gray-500">
-                                가입일: <span id="sellerJoinDate">-</span>
-                            </p>
+                <!-- 우측: 판매자 및 통계 -->
+                <div>
+                    <!-- 상품 통계 -->
+                    <div class="flex items-center gap-6 text-sm text-gray-600 mb-6">
+                        <div class="flex items-center gap-1">
+                            <i class="fas fa-eye"></i>
+                            <span id="viewCount">0</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <i class="fas fa-heart"></i>
+                            <span id="likeCount">0</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <i class="fas fa-comment"></i>
+                            <span id="chatCount">0</span>
+                        </div>
+                    </div>
+
+                    <!-- 판매자 정보 -->
+                    <div class="border-t pt-4">
+                        <h3 class="font-bold text-gray-800 mb-3">판매자 정보</h3>
+                        <div class="flex items-center gap-3">
+                            <img id="sellerAvatar" src="https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839" alt="판매자" 
+                                 class="w-12 h-12 rounded-full object-cover border-2 border-gray-200">
+                            <div>
+                                <p id="sellerName" class="font-bold text-gray-900">로딩중...</p>
+                                <p class="text-sm text-gray-600">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>
+                                    <span id="productLocation">위치</span>
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                    가입일: <span id="sellerJoinDate">-</span>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
