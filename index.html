@@ -193,18 +193,13 @@
                     constraints.push(where('category', '==', currentCategory));
                 }
                 
-                // 판매완료 숨김
-                if (hideSoldItems) {
-                    constraints.push(where('status', '!=', '판매완료'));
-                }
+                // 복합 인덱스 문제 방지: 단순 정렬만 서버에서, 나머지는 클라이언트
+                const needClientSort = currentSort === 'likes' || 
+                    (currentSort === 'price' && currentCategory !== 'all');
                 
-                // 정렬 (likes는 배열이므로 서버 정렬 불가 - 클라이언트에서 처리)
-                if (currentSort === 'recent') {
-                    constraints.push(orderBy('createdAt', 'desc'));
-                } else if (currentSort === 'price') {
+                if (!needClientSort && currentSort === 'price') {
                     constraints.push(orderBy('price', 'asc'));
-                } else if (currentSort === 'likes') {
-                    // likes 정렬은 클라이언트에서 처리하므로 기본 정렬 사용
+                } else {
                     constraints.push(orderBy('createdAt', 'desc'));
                 }
                 
@@ -213,8 +208,7 @@
                     constraints.push(startAfter(lastVisible));
                 }
                 
-                // likes 정렬일 때는 더 많은 데이터를 가져와서 클라이언트에서 정렬
-                const fetchLimit = currentSort === 'likes' ? ITEMS_PER_PAGE * 3 : ITEMS_PER_PAGE;
+                const fetchLimit = needClientSort ? ITEMS_PER_PAGE * 3 : ITEMS_PER_PAGE;
                 constraints.push(limit(fetchLimit));
                 
                 const finalQuery = query(q, ...constraints);
@@ -259,16 +253,25 @@
                     ...doc.data()
                 }));
                 
-                // likes 정렬일 때 클라이언트에서 정렬
+                // 클라이언트 정렬 처리
                 if (currentSort === 'likes') {
                     products.sort((a, b) => {
-                        const aLikes = Array.isArray(a.likes) ? a.likes.length : 0;
-                        const bLikes = Array.isArray(b.likes) ? b.likes.length : 0;
+                        const aLikes = typeof a.likeCount === 'number' ? a.likeCount : 
+                            (Array.isArray(a.likedBy) ? a.likedBy.length : 0);
+                        const bLikes = typeof b.likeCount === 'number' ? b.likeCount :
+                            (Array.isArray(b.likedBy) ? b.likedBy.length : 0);
                         return bLikes - aLikes;
                     });
-                    // 필요한 개수만 잘라내기
-                    products = products.slice(0, ITEMS_PER_PAGE);
+                } else if (currentSort === 'price' && currentCategory !== 'all') {
+                    products.sort((a, b) => (a.price || 0) - (b.price || 0));
                 }
+                
+                // 판매완료 숨김 (클라이언트 필터)
+                if (hideSoldItems) {
+                    products = products.filter(p => p.status !== '판매완료');
+                }
+                
+                products = products.slice(0, ITEMS_PER_PAGE);
                 
                 const container = document.getElementById('productGrid');
                 container.classList.remove('hidden');
@@ -289,15 +292,7 @@
                 document.getElementById('loadingMore').classList.add('hidden');
                 
                 if (reset) {
-                    showNetworkError();
-                    // 구체적인 에러 토스트 표시
-                    if (error.code === 'permission-denied') {
-                        showToast('데이터 접근 권한이 없습니다. Firebase 규칙을 확인해주세요.', 'error');
-                    } else if (error.code === 'unavailable') {
-                        showToast('네트워크 연결을 확인해주세요', 'error');
-                    } else {
-                        showToast('상품을 불러오는 중 오류가 발생했습니다', 'error');
-                    }
+                    showNetworkError(error.code, error.message);
                 }
             }
             
@@ -383,8 +378,25 @@
         }
 
         // ========== 네트워크 오류 ==========
-        function showNetworkError() {
+        function showNetworkError(code, message) {
             document.getElementById('networkError').classList.remove('hidden');
+            const titleEl = document.getElementById('networkErrorTitle');
+            const msgEl = document.getElementById('networkErrorMsg');
+            const subEl = document.getElementById('networkErrorSub');
+            
+            if (code === 'permission-denied') {
+                titleEl.textContent = '접근 권한이 없습니다';
+                msgEl.textContent = 'Firebase Firestore 보안 규칙 설정이 필요합니다.';
+                subEl.innerHTML = '📌 Firebase 콘솔 → Firestore → 규칙 탭에서 읽기 권한을 허용해주세요';
+            } else if (code === 'unavailable' || code === 'network-request-failed') {
+                titleEl.textContent = '네트워크 연결을 확인해주세요';
+                msgEl.textContent = '인터넷 연결이 불안정합니다.';
+                subEl.textContent = '';
+            } else {
+                titleEl.textContent = '오류가 발생했습니다';
+                msgEl.textContent = message || '잠시 후 다시 시도해주세요.';
+                subEl.textContent = code ? `오류 코드: ${code}` : '';
+            }
         }
 
         window.retryLoadProducts = async function() {
@@ -415,7 +427,7 @@
                 'all': '최신 식물',
                 '관엽식물': '관엽식물',
                 '다육식물': '다육식물',
-                '화분/흙': '화분/용품'
+                '화분/용품': '화분/용품'
             };
             
             document.getElementById('sectionTitle').textContent = titles[category] || '최신 식물';
@@ -1112,7 +1124,7 @@
                     </div>
                     <h3 class="font-bold text-gray-800 text-xs">다육식물</h3>
                 </div>
-                <div class="category-card bg-white rounded-2xl p-4 text-center shadow-sm" onclick="filterProducts('화분/흙', event)">
+                <div class="category-card bg-white rounded-2xl p-4 text-center shadow-sm" onclick="filterProducts('화분/용품', event)">
                     <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-2">
                         <i class="fas fa-tint text-green-600 text-lg"></i>
                     </div>
@@ -1144,11 +1156,14 @@
             
             <div id="productGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
             
-            <!-- 네트워크 오류 -->
+            <!-- 오류 표시 -->
             <div id="networkError" class="hidden text-center py-20">
-                <i class="fas fa-wifi-slash text-6xl text-gray-400 mb-4"></i>
-                <p class="text-gray-600 mb-2 text-lg">네트워크 연결을 확인해주세요</p>
-                <p class="text-gray-500 text-sm mb-6">인터넷 연결이 불안정합니다</p>
+                <div class="inline-block p-8 bg-red-50 rounded-3xl mb-6">
+                    <i class="fas fa-exclamation-triangle text-6xl text-red-400"></i>
+                </div>
+                <h3 id="networkErrorTitle" class="text-xl font-bold text-gray-800 mb-2">오류가 발생했습니다</h3>
+                <p id="networkErrorMsg" class="text-gray-500 text-sm mb-2">Firebase 규칙을 확인해주세요</p>
+                <p id="networkErrorSub" class="text-gray-400 text-xs mb-6"></p>
                 <button onclick="retryLoadProducts()" class="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition">
                     <i class="fas fa-redo mr-2"></i>다시 시도
                 </button>
@@ -1346,8 +1361,12 @@
                     취소
                 </button>
                 <button onclick="updateLocationRange(document.querySelector('input[type=range]').value)" 
-<<<<<<< HEAD
                         class="flex-1 bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 transition">
-=======
-                        class="flex-1 bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 transition">
->>>>>>> a964570cfdcb6b366c47968111b5d242b0c895f7
+                    저장
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

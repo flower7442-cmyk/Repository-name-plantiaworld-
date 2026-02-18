@@ -380,7 +380,23 @@
         }
 
         // ========== 판매자 정보 로드 ==========
+        const DEFAULT_AVATAR = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2220%22%20r%3D%2220%22%20fill%3D%22%2310b981%22%2F%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2215%22%20r%3D%227%22%20fill%3D%22white%22%2F%3E%3Cellipse%20cx%3D%2220%22%20cy%3D%2234%22%20rx%3D%2211%22%20ry%3D%228%22%20fill%3D%22white%22%2F%3E%3C%2Fsvg%3E';
+        
         async function loadSellerInfo(sellerId) {
+            // 현재 상품에서 판매자 이름 미리 표시 (API 실패 대비)
+            const nameEl = document.getElementById('sellerName');
+            const avatarEl = document.getElementById('sellerAvatar');
+            
+            if (currentProduct && currentProduct.sellerName && nameEl) {
+                nameEl.textContent = currentProduct.sellerName;
+            }
+            if (avatarEl) {
+                avatarEl.src = DEFAULT_AVATAR;
+                avatarEl.onerror = function() { this.src = DEFAULT_AVATAR; };
+            }
+            
+            if (!sellerId) return;
+            
             try {
                 const sellerDoc = await getDoc(doc(db, 'users', sellerId));
                 
@@ -388,26 +404,27 @@
                     const seller = sellerDoc.data();
                     console.log('✅ 판매자 정보:', seller);
                     
-                    const avatarEl = document.getElementById('sellerAvatar');
-                    const nameEl = document.getElementById('sellerName');
                     const joinDateEl = document.getElementById('sellerJoinDate');
                     
-                    if (avatarEl) {
-                        avatarEl.src = seller.photoURL || 'https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839';
-                        avatarEl.onerror = function() {
-                            this.src = 'https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839';
-                        };
+                    if (avatarEl && seller.photoURL) {
+                        avatarEl.src = seller.photoURL;
+                        avatarEl.onerror = function() { this.src = DEFAULT_AVATAR; };
                     }
-                    if (nameEl) nameEl.textContent = seller.displayName || '익명';
+                    if (nameEl) nameEl.textContent = seller.username || seller.displayName || currentProduct?.sellerName || '익명';
                     if (joinDateEl) {
                         const joinDate = seller.createdAt ? new Date(seller.createdAt.seconds * 1000) : new Date();
                         joinDateEl.textContent = joinDate.toLocaleDateString('ko-KR');
                     }
                 } else {
-                    console.warn('⚠️ 판매자 정보 없음');
+                    console.warn('⚠️ 판매자 정보 없음 - 상품 데이터 사용');
                 }
             } catch (error) {
-                console.error('❌ 판매자 정보 로드 오류:', error);
+                // permission-denied: Firebase 규칙으로 읽기 허용 필요
+                // 상품의 sellerName으로 대체 표시
+                console.warn('⚠️ 판매자 정보 로드 실패 (상품 데이터로 대체):', error.message);
+                if (nameEl && currentProduct?.sellerName) {
+                    nameEl.textContent = currentProduct.sellerName;
+                }
             }
         }
 
@@ -435,8 +452,8 @@
                     const product = doc.data();
                     const firstImage = product.images && product.images[0] 
                         ? product.images[0] 
-                        : 'https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839';
-                    
+                        ? product.images[0] 
+                        : 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%23e8f5e9%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-size%3D%2260%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%3E%F0%9F%8C%BF%3C%2Ftext%3E%3C%2Fsvg%3E';
                     return `
                         <a href="product-detail.html?id=${doc.id}" class="group block">
                             <div class="glass-card rounded-xl overflow-hidden hover:shadow-lg transition">
@@ -444,7 +461,7 @@
                                     <img src="${firstImage}" 
                                          alt="${product.title || '상품'}"
                                          class="w-full h-full object-cover group-hover:scale-105 transition"
-                                         onerror="this.src='https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839'">
+                                         onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%23e8f5e9%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-size%3D%2260%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%3E%F0%9F%8C%BF%3C%2Ftext%3E%3C%2Fsvg%3E'">
                                 </div>
                                 <div class="p-3">
                                     <p class="font-bold text-gray-800 truncate">${product.title || '제목 없음'}</p>
@@ -498,8 +515,8 @@
                     const product = doc.data();
                     const firstImage = product.images && product.images[0] 
                         ? product.images[0] 
-                        : 'https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839';
-                    
+                        ? product.images[0] 
+                        : 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%23e8f5e9%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-size%3D%2260%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%3E%F0%9F%8C%BF%3C%2Ftext%3E%3C%2Fsvg%3E';
                     return `
                         <a href="product-detail.html?id=${doc.id}" class="group block">
                             <div class="glass-card rounded-xl overflow-hidden hover:shadow-lg transition">
@@ -507,7 +524,7 @@
                                     <img src="${firstImage}" 
                                          alt="${product.title || '상품'}"
                                          class="w-full h-full object-cover group-hover:scale-105 transition"
-                                         onerror="this.src='https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839'">
+                                         onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%23e8f5e9%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-size%3D%2260%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%3E%F0%9F%8C%BF%3C%2Ftext%3E%3C%2Fsvg%3E'">
                                 </div>
                                 <div class="p-3">
                                     <p class="font-bold text-gray-800 truncate">${product.title || '제목 없음'}</p>
@@ -1078,7 +1095,7 @@
                     <div class="border-t pt-4">
                         <h3 class="font-bold text-gray-800 mb-3">판매자 정보</h3>
                         <div class="flex items-center gap-3">
-                            <img id="sellerAvatar" src="https://firebasestorage.googleapis.com/v0/b/plantiaworld.firebasestorage.app/o/profile-images%2FSrybm6KTK0WgkF1KLAmHE9ZNVzC3%2F1770849472875_20260127_222113.jpg?alt=media&token=d42113ad-f59a-40ea-9ddc-75cafd9c2839" alt="판매자" 
+            <img id="sellerAvatar" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2220%22%20r%3D%2220%22%20fill%3D%22%2310b981%22%2F%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2215%22%20r%3D%227%22%20fill%3D%22white%22%2F%3E%3Cellipse%20cx%3D%2220%22%20cy%3D%2234%22%20rx%3D%2211%22%20ry%3D%228%22%20fill%3D%22white%22%2F%3E%3C%2Fsvg%3E" class="w-16 h-16 rounded-full object-cover" alt="판매자 프로필">
                                  class="w-12 h-12 rounded-full object-cover border-2 border-gray-200">
                             <div>
                                 <p id="sellerName" class="font-bold text-gray-900">로딩중...</p>
