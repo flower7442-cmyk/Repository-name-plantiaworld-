@@ -9,8 +9,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { 
             getFirestore, 
             collection, 
@@ -21,8 +21,9 @@
             startAfter,
             getDocs,
             doc,
-            getDoc
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+            getDoc,
+            updateDoc
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
            apiKey: "AIzaSyAW_z3hoI9SZ1-hoxKVYBKs7rbdo8n6wdc",
@@ -774,11 +775,25 @@
             document.body.style.overflow = 'auto';
         };
 
-        window.updateLocationRange = function(newRange) {
+        window.updateLocationRange = async function(newRange) {
             locationRange = parseInt(newRange);
             updateLocationUI();
             closeLocationModal();
             showToast(`거래 범위가 ${locationRange}km로 설정되었습니다`);
+
+            // 로그인된 경우 Firestore에도 저장
+            if (currentUser) {
+                try {
+                    await updateDoc(doc(db, 'users', currentUser.uid), {
+                        locationRange: locationRange
+                    });
+                } catch (error) {
+                    console.error('거래 범위 저장 오류:', error);
+                }
+            }
+
+            // 상품 목록 새로고침
+            await loadProducts(true);
         };
 
         // ========== 플랜티아월드 소개 모달 ==========
@@ -1341,7 +1356,11 @@
             </div>
             
             <div class="mb-6">
-                <p class="text-sm text-gray-600 mb-4">현재 위치: <span id="currentLocationModal" class="font-bold">부산 해운대구</span></p>
+                <p class="text-sm text-gray-600 mb-2">현재 위치: <span id="currentLocationModal" class="font-bold">부산 해운대구</span></p>
+                <p class="text-xs text-gray-500 bg-green-50 rounded-xl p-3 mb-4">
+                    <i class="fas fa-info-circle text-green-500 mr-1"></i>
+                    설정한 거리 내의 이웃이 등록한 식물만 보여집니다. 거리가 넓을수록 더 많은 식물을 볼 수 있어요!
+                </p>
                 
                 <label class="block text-sm font-bold text-gray-600 mb-2">거래 가능 거리</label>
                 <div class="flex items-center gap-4">

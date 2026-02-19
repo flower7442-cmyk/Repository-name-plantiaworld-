@@ -8,18 +8,14 @@
     ],
     "rewrites": [
       {
-        "source": "**",
-        "destination": "/index.html"
+        "source": "/edit-product",
+        "destination": "/add-product.html"
+      },
+      {
+        "source": "/edit-product.html",
+        "destination": "/add-product.html"
       }
-    ]
-  },
-  "emulators": {
-    "hosting": {
-      "port": 5000
-    },
-    "ui": {
-      "enabled": true
-    },
-    "singleProjectMode": true
+    ],
+    "cleanUrls": false
   }
 }
