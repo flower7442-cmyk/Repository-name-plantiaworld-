@@ -323,7 +323,7 @@
     </main>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { 
             getFirestore, 
             collection, 
@@ -333,8 +333,9 @@
             updateDoc, 
             deleteDoc,
             serverTimestamp 
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAW_z3hoI9SZ1-hoxKVYBKs7rbdo8n6wdc",
@@ -349,10 +350,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
+        const storage = getStorage(app);
 
         // ========== 전역 변수 ==========
         let currentUser = null;
-        let uploadedImages = [];
+        let uploadedImages = []; // 최종 이미지 URL 또는 Base64 목록
+        let newImageFiles = [];  // 새로 추가된 실제 File 객체 목록
         let isEditMode = false;
         let productId = null;
         let map = null;
@@ -506,41 +509,15 @@
                     return;
                 }
                 
+                // 미리보기용 Base64 생성
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        const max_size = 800; // 고품질 유지
-
-                        // 비율 유지하며 리사이즈
-                        if (width > height) {
-                            if (width > max_size) {
-                                height *= max_size / width;
-                                width = max_size;
-                            }
-                        } else {
-                            if (height > max_size) {
-                                width *= max_size / height;
-                                height = max_size;
-                            }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // 품질 0.8로 압축
-                        const compressedData = canvas.toDataURL('image/jpeg', 0.8);
-                        uploadedImages.push(compressedData);
-                        updatePreview();
-                        
-                        showToast('이미지가 추가되었습니다');
-                    };
-                    img.src = e.target.result;
+                    // 미리보기에는 Base64 사용, 실제 업로드는 File 객체 사용
+                    const previewUrl = e.target.result;
+                    uploadedImages.push(previewUrl);
+                    newImageFiles.push({ file, previewUrl }); // File 객체 보관
+                    updatePreview();
+                    showToast('이미지가 추가되었습니다');
                 };
                 reader.readAsDataURL(file);
             });
@@ -566,7 +543,11 @@
 
         // ========== 이미지 삭제 ==========
         window.removeImage = function(index) {
+            const removedSrc = uploadedImages[index];
             uploadedImages.splice(index, 1);
+            // newImageFiles에서도 같은 previewUrl 가진 항목 제거
+            const newFileIdx = newImageFiles.findIndex(f => f.previewUrl === removedSrc);
+            if (newFileIdx !== -1) newImageFiles.splice(newFileIdx, 1);
             updatePreview();
             showToast('이미지가 삭제되었습니다');
         };
@@ -697,13 +678,28 @@
             submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>${isEditMode ? '수정 중...' : '등록 중...'}`;
             
             try {
+                // ===== 새 이미지를 Firebase Storage에 업로드 =====
+                const uploadedUrls = [];
+                for (const { file, previewUrl } of newImageFiles) {
+                    const storageRef = ref(storage, `products/${currentUser.uid}/${Date.now()}_${file.name}`);
+                    const snapshot = await uploadBytes(storageRef, file);
+                    const downloadUrl = await getDownloadURL(snapshot.ref);
+                    uploadedUrls.push({ previewUrl, downloadUrl });
+                }
+
+                // uploadedImages 안의 Base64를 Storage URL로 교체
+                const finalImages = uploadedImages.map(src => {
+                    const found = uploadedUrls.find(u => u.previewUrl === src);
+                    return found ? found.downloadUrl : src; // 기존 URL이면 그대로 유지
+                });
+
                 const productData = {
                     title: title,
                     category: document.querySelector('input[name="category"]:checked').value,
                     price: Number(document.getElementById('price').value) || 0,
                     description: description,
                     location: locationText,
-                    images: uploadedImages,
+                    images: finalImages,
                     // 수정 모드일 때는 기존 status 유지, 신규 등록만 "판매중"으로 설정
                     ...(isEditMode ? {} : { status: "판매중" })
                 };
