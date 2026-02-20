@@ -174,13 +174,21 @@
                         
                         // 판매자 정보 로드
                         if (!prevProduct || prevProduct.sellerId !== currentProduct.sellerId) {
-                            console.log('👤 판매자 정보 로드 시작:', currentProduct.sellerId);
-                            await loadSellerInfo(currentProduct.sellerId);
+                            if (currentProduct.sellerId) {
+                                console.log('👤 판매자 정보 로드 시작:', currentProduct.sellerId);
+                                await loadSellerInfo(currentProduct.sellerId);
+                            } else {
+                                console.warn('⚠️ 이 상품에 sellerId가 없습니다.');
+                                const nameEl = document.getElementById('sellerName');
+                                if (nameEl) nameEl.textContent = '판매자 정보 없음';
+                            }
                         }
                         
                         // 판매자의 다른 상품 로드
                         if (!prevProduct || prevProduct.sellerId !== currentProduct.sellerId) {
-                            await loadSellerOtherProducts(currentProduct.sellerId);
+                            if (currentProduct.sellerId) {
+                                await loadSellerOtherProducts(currentProduct.sellerId);
+                            }
                         }
                         
                         // 추천 상품 로드
@@ -381,6 +389,10 @@
 
         // ========== 판매자 정보 로드 ==========
         async function loadSellerInfo(sellerId) {
+            if (!sellerId || typeof sellerId !== 'string') {
+                console.warn('⚠️ loadSellerInfo: 유효하지 않은 sellerId:', sellerId);
+                return;
+            }
             try {
                 const sellerDoc = await getDoc(doc(db, 'users', sellerId));
                 
@@ -415,6 +427,11 @@
         async function loadSellerOtherProducts(sellerId) {
             const container = document.getElementById('sellerOtherProducts');
             if (!container) return;
+            
+            if (!sellerId || typeof sellerId !== 'string') {
+                container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">다른 상품이 없습니다</p>';
+                return;
+            }
             
             try {
                 const q = query(
@@ -632,6 +649,7 @@
                         productPrice: currentProduct.price,
                         sellerId: currentProduct.sellerId,
                         buyerId: currentUser.uid,
+                        participants: [currentProduct.sellerId, currentUser.uid],
                         createdAt: serverTimestamp(),
                         lastMessage: '',
                         lastMessageTime: serverTimestamp(),
@@ -686,7 +704,11 @@
 
         // ========== 상품 수정 ==========
         window.editProduct = function() {
-            window.location.href = `add-product.html?id=${productId}`;
+            if (!productId) {
+                alert('상품 ID를 찾을 수 없습니다.');
+                return;
+            }
+            window.location.href = `edit-product.html?id=${productId}`;
         };
 
         // ========== 상품 삭제 ==========

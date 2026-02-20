@@ -230,21 +230,29 @@
 
                 } else {
                     // 로그인 - 자동 로그인 유지 여부에 따라 세션 설정
+                    // rememberMe 체크 안 하면 브라우저 닫을 때 자동 로그아웃
                     const rememberMe = document.getElementById('rememberMe')?.checked || false;
+                    // setPersistence는 signIn 전에 반드시 호출
                     await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
                     
                     const userCredential = await signInWithEmailAndPassword(auth, email, password);
                     const user = userCredential.user;
                     
-                    const userDoc = await getDoc(doc(db, 'users', user.uid));
-                    const userData = userDoc.data();
-                    const displayName = userData?.username || user.email;
+                    let displayName = user.email;
+                    try {
+                        const userDoc = await getDoc(doc(db, 'users', user.uid));
+                        if (userDoc.exists()) {
+                            displayName = userDoc.data()?.username || userDoc.data()?.displayName || user.email;
+                        }
+                    } catch (e) {
+                        console.warn('유저 정보 로드 실패:', e);
+                    }
 
                     showToast('로그인 되었습니다!', 'success');
                     
-                    // 로그인된 화면으로 자동 전환
+                    // 메인으로 이동
                     setTimeout(() => {
-                        showLoggedInView(displayName, user);
+                        window.location.href = 'index.html';
                     }, 1000);
                 }
 

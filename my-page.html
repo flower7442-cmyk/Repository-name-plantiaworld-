@@ -615,6 +615,10 @@
                         <div class="absolute top-2 left-2">
                             <span class="${statusClass} text-white text-xs px-3 py-1 rounded-full font-semibold">${escapeHtml(status)}</span>
                         </div>
+                        <button onclick="event.stopPropagation(); window.location.href='edit-product.html?id=${escapeHtml(product.id)}'"
+                                class="absolute top-2 right-2 bg-white text-green-700 text-xs px-2 py-1 rounded-lg shadow hover:bg-green-50 transition font-semibold">
+                            <i class="fas fa-edit mr-1"></i>수정
+                        </button>
                     </div>
                     <div class="p-4">
                         <h4 class="font-bold text-sm mb-1 truncate">${escapeHtml(product.title || '제목 없음')}</h4>
