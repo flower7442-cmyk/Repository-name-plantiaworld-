@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고객센터 - PlantiaWorld</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        .header {
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #4b5563;
+            font-size: 20px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .back-btn:hover { background: #f3f4f6; }
+
+        .header-title { font-size: 18px; font-weight: 700; color: #1f2937; }
+
+        .container { max-width: 860px; margin: 0 auto; padding: 32px 16px; }
+
+        /* 히어로 */
+        .hero {
+            background: rgba(255,255,255,0.15);
+            border-radius: 24px;
+            padding: 36px 32px;
+            margin-bottom: 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-icon {
+            width: 68px;
+            height: 68px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 30px;
+        }
+
+        .hero h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+        .hero p { font-size: 14px; opacity: 0.88; line-height: 1.7; }
+
+        .op-hours {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 13px;
+            margin-top: 14px;
+        }
+
+        /* 빠른 채널 */
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .channel-card {
+            background: rgba(255,255,255,0.98);
+            border-radius: 18px;
+            padding: 22px 18px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .channel-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .channel-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 20px;
+        }
+
+        .channel-icon.green { background: #f0fdf4; color: #2e8b57; }
+        .channel-icon.blue { background: #eff6ff; color: #3b82f6; }
+        .channel-icon.purple { background: #f5f3ff; color: #7c3aed; }
+
+        .channel-card h3 { font-size: 14px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+        .channel-card p { font-size: 12px; color: #6b7280; line-height: 1.5; }
+
+        /* FAQ */
+        .card {
+            background: rgba(255,255,255,0.98);
+            border-radius: 20px;
+            padding: 28px 32px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i { color: #2e8b57; }
+
+        .faq-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .faq-q {
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            gap: 12px;
+            transition: background 0.2s;
+        }
+
+        .faq-q:hover { background: #f9fafb; }
+
+        .faq-q.open { background: #f0fdf4; color: #2e8b57; }
+
+        .faq-icon {
+            width: 24px;
+            height: 24px;
+            background: #f0fdf4;
+            color: #2e8b57;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+
+        .faq-arrow {
+            color: #9ca3af;
+            font-size: 13px;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .faq-q.open .faq-arrow { transform: rotate(180deg); color: #2e8b57; }
+
+        .faq-a {
+            display: none;
+            padding: 14px 18px;
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.8;
+            background: #fafafa;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .faq-a.open { display: block; }
+
+        /* 문의 폼 */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group.full { grid-column: 1 / -1; }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-label .required { color: #ef4444; margin-left: 3px; }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #1f2937;
+            background: white;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #2e8b57;
+            box-shadow: 0 0 0 3px rgba(46,139,87,0.08);
+        }
+
+        .form-textarea { resize: vertical; min-height: 120px; line-height: 1.7; }
+
+        .char-count { font-size: 11px; color: #9ca3af; text-align: right; margin-top: 4px; }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #2e8b57 0%, #32cd32 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(46,139,87,0.3);
+        }
+
+        .submit-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+        /* 토스트 */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            z-index: 999;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-16px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        .success-screen {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+
+        .success-screen .check {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #2e8b57, #32cd32);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 30px;
+            color: white;
+        }
+
+        .success-screen h3 { font-size: 20px; font-weight: 700; color: #1f2937; margin-bottom: 8px; }
+        .success-screen p { font-size: 14px; color: #6b7280; line-height: 1.7; }
+
+        .back-to-form-btn {
+            margin-top: 20px;
+            background: #f0fdf4;
+            color: #2e8b57;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .notice-box {
+            background: #f0fdf4;
+            border: 1px solid #d1fae5;
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 13px;
+            color: #374151;
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+
+        .notice-box i { color: #2e8b57; margin-right: 6px; }
+
+        @media (max-width: 600px) {
+            .channel-grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full { grid-column: unset; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-inner">
+            <button class="back-btn" onclick="history.back()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <span class="header-title">고객센터</span>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- 히어로 -->
+        <div class="hero">
+            <div class="hero-icon">🌿</div>
+            <h1>무엇을 도와드릴까요?</h1>
+            <p>PlantiaWorld 이용 중 불편한 점이 있으시면<br>언제든지 문의해 주세요.</p>
+            <div class="op-hours">
+                <i class="fas fa-clock"></i> 운영시간: 평일 09:00 ~ 18:00 (주말·공휴일 휴무)
+            </div>
+        </div>
+
+        <!-- 빠른 채널 -->
+        <div class="channel-grid">
+            <div class="channel-card">
+                <div class="channel-icon green">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <h3>이메일 문의</h3>
+                <p>support@plantiaworld.com<br>영업일 기준 3일 이내 답변</p>
+            </div>
+            <div class="channel-card">
+                <div class="channel-icon blue">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h3>1:1 문의</h3>
+                <p>아래 양식 작성 후 제출<br>가장 빠른 처리 가능</p>
+            </div>
+            <div class="channel-card">
+                <div class="channel-icon purple">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h3>이용 가이드</h3>
+                <p>FAQ에서 자주 묻는 질문<br>바로 확인 가능</p>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-question-circle"></i> 자주 묻는 질문 (FAQ)
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="faq-icon">Q</span>
+                        <span>회원가입은 어떻게 하나요?</span>
+                    </div>
+                    <i class="fas fa-chevron-down faq-arrow"></i>
+                </div>
+                <div class="faq-a">
+                    PlantiaWorld는 Google 계정으로 간편하게 로그인/가입할 수 있습니다. 메인 화면의 "로그인" 버튼을 클릭한 후 Google 계정으로 인증하시면 자동으로 회원가입이 완료됩니다. 별도의 이메일 인증이나 추가 정보 입력이 필요하지 않습니다.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="faq-icon">Q</span>
+                        <span>상품 등록은 어떻게 하나요?</span>
+                    </div>
+                    <i class="fas fa-chevron-down faq-arrow"></i>
+                </div>
+                <div class="faq-a">
+                    로그인 후 메인 화면의 "+" 버튼 또는 "상품 등록" 메뉴를 통해 상품을 등록할 수 있습니다. 사진(최대 8장), 제목, 카테고리, 가격, 설명, 거래 위치를 입력하신 후 등록 버튼을 클릭하면 즉시 게시됩니다.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="faq-icon">Q</span>
+                        <span>거래 사기를 당했을 때 어떻게 하나요?</span>
+                    </div>
+                    <i class="fas fa-chevron-down faq-arrow"></i>
+                </div>
+                <div class="faq-a">
+                    상품 상세 페이지에서 신고 기능을 통해 해당 판매자를 신고해 주세요. 관리자가 확인 후 계정 제재 조치를 취합니다. 금전적 피해가 발생한 경우, 경찰청 사이버범죄신고시스템(ecrm.police.go.kr)에 신고하시는 것을 권장합니다. PlantiaWorld는 중개 플랫폼으로 직접적인 환불 처리는 어렵습니다.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="faq-icon">Q</span>
+                        <span>계정을 탈퇴하려면 어떻게 하나요?</span>
+                    </div>
+                    <i class="fas fa-chevron-down faq-arrow"></i>
+                </div>
+                <div class="faq-a">
+                    현재 앱 내 탈퇴 기능은 준비 중입니다. 탈퇴를 원하시면 아래 1:1 문의 양식을 통해 "회원 탈퇴 요청" 유형으로 문의해 주세요. 영업일 기준 3일 이내에 처리해 드립니다. 탈퇴 시 등록된 상품 및 채팅 내역이 모두 삭제됩니다.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="faq-icon">Q</span>
+                        <span>판매 완료된 상품은 어떻게 처리하나요?</span>
+                    </div>
+                    <i class="fas fa-chevron-down faq-arrow"></i>
+                </div>
+                <div class="faq-a">
+                    내 상품 상세 페이지 하단의 "상태 변경" 버튼을 통해 상품 상태를 "판매완료"로 변경해 주세요. 판매완료 상태의 상품은 다른 사용자에게 거래 불가 상태로 표시됩니다. 삭제를 원하시면 "삭제" 버튼을 이용해 주세요.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="faq-icon">Q</span>
+                        <span>멸종위기 식물도 거래할 수 있나요?</span>
+                    </div>
+                    <i class="fas fa-chevron-down faq-arrow"></i>
+                </div>
+                <div class="faq-a">
+                    아니요, 절대 불가합니다. 야생생물 보호 및 관리에 관한 법률에 따라 멸종위기종 식물의 거래는 엄격히 금지되어 있습니다. 해당 게시물 발견 시 즉시 삭제 조치하며, 반복 위반 시 계정이 영구 정지됩니다.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 1:1 문의 -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-paper-plane"></i> 1:1 문의 접수
+            </div>
+
+            <div class="notice-box">
+                <i class="fas fa-info-circle"></i>
+                문의 접수 후 <strong>영업일 기준 3일 이내</strong>에 입력하신 이메일로 답변을 드립니다.
+                운영시간(평일 09:00~18:00) 외 접수 건은 다음 영업일에 처리됩니다.
+            </div>
+
+            <!-- 폼 -->
+            <div id="inquiryForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">이름 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="inp-name" placeholder="홍길동" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">이메일 <span class="required">*</span></label>
+                        <input type="email" class="form-input" id="inp-email" placeholder="example@email.com">
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label">문의 유형 <span class="required">*</span></label>
+                        <select class="form-select" id="inp-type">
+                            <option value="">선택해주세요</option>
+                            <option value="거래 문제">거래 문제 (사기, 미거래 등)</option>
+                            <option value="계정 문제">계정 문제 (로그인, 탈퇴 등)</option>
+                            <option value="상품 신고">상품/사용자 신고</option>
+                            <option value="회원 탈퇴 요청">회원 탈퇴 요청</option>
+                            <option value="서비스 오류">서비스 오류 신고</option>
+                            <option value="기능 제안">기능 제안</option>
+                            <option value="기타">기타 문의</option>
+                        </select>
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label">제목 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="inp-title" placeholder="문의 제목을 입력해주세요" maxlength="50">
+                    </div>
+                    <div class="form-group full">
+                        <label class="form-label">문의 내용 <span class="required">*</span></label>
+                        <textarea class="form-textarea" id="inp-content" placeholder="문의 내용을 자세히 입력해주세요. 거래 관련 문제의 경우 상대방 닉네임, 상품명, 거래 일시를 함께 기재해 주시면 빠른 처리가 가능합니다." maxlength="1000" oninput="updateCharCount()"></textarea>
+                        <div class="char-count"><span id="charCount">0</span>/1000</div>
+                    </div>
+                </div>
+                <button class="submit-btn" id="submitBtn" onclick="submitInquiry()">
+                    <i class="fas fa-paper-plane" style="margin-right:8px;"></i>문의 접수하기
+                </button>
+            </div>
+
+            <!-- 성공 화면 -->
+            <div class="success-screen" id="successScreen">
+                <div class="check">✓</div>
+                <h3>문의가 접수되었습니다!</h3>
+                <p>입력하신 이메일로 영업일 기준 3일 이내에 답변 드리겠습니다.<br>추가 문의사항은 support@plantiaworld.com으로 연락주세요.</p>
+                <button class="back-to-form-btn" onclick="resetForm()">
+                    <i class="fas fa-redo" style="margin-right:6px;"></i>새 문의 접수
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 토스트 -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg"></span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAW_z3hoI9SZ1-hoxKVYBKs7rbdo8n6wdc",
+            authDomain: "plantiaworld.firebaseapp.com",
+            projectId: "plantiaworld",
+            storageBucket: "plantiaworld.firebasestorage.app",
+            messagingSenderId: "18112813073",
+            appId: "1:18112813073:web:7247046c038a3831db79b0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 로그인 사용자면 이메일 자동 입력
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('inp-email').value = user.email || '';
+                document.getElementById('inp-name').value = user.displayName || '';
+            }
+        });
+
+        function showToast(msg) {
+            document.getElementById('toastMsg').textContent = msg;
+            const t = document.getElementById('toast');
+            t.style.display = 'flex';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        window.updateCharCount = function() {
+            const val = document.getElementById('inp-content').value.length;
+            document.getElementById('charCount').textContent = val;
+        };
+
+        window.toggleFaq = function(el) {
+            const answer = el.nextElementSibling;
+            const isOpen = el.classList.contains('open');
+            // 모두 닫기
+            document.querySelectorAll('.faq-q.open').forEach(q => {
+                q.classList.remove('open');
+                q.nextElementSibling.classList.remove('open');
+            });
+            if (!isOpen) {
+                el.classList.add('open');
+                answer.classList.add('open');
+            }
+        };
+
+        window.submitInquiry = async function() {
+            const name = document.getElementById('inp-name').value.trim();
+            const email = document.getElementById('inp-email').value.trim();
+            const type = document.getElementById('inp-type').value;
+            const title = document.getElementById('inp-title').value.trim();
+            const content = document.getElementById('inp-content').value.trim();
+
+            if (!name || !email || !type || !title || !content) {
+                showToast('모든 필수 항목을 입력해주세요.');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showToast('올바른 이메일 주소를 입력해주세요.');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i>접수 중...';
+
+            try {
+                await addDoc(collection(db, 'inquiries'), {
+                    name, email, type, title, content,
+                    status: 'pending',
+                    createdAt: serverTimestamp()
+                });
+
+                document.getElementById('inquiryForm').style.display = 'none';
+                document.getElementById('successScreen').style.display = 'block';
+            } catch (e) {
+                console.error(e);
+                showToast('접수에 실패했습니다. 다시 시도해주세요.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane" style="margin-right:8px;"></i>문의 접수하기';
+            }
+        };
+
+        window.resetForm = function() {
+            document.getElementById('inp-type').value = '';
+            document.getElementById('inp-title').value = '';
+            document.getElementById('inp-content').value = '';
+            document.getElementById('charCount').textContent = '0';
+            document.getElementById('successScreen').style.display = 'none';
+            document.getElementById('inquiryForm').style.display = 'block';
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane" style="margin-right:8px;"></i>문의 접수하기';
+        };
+    </script>
+
+</body>
+</html>

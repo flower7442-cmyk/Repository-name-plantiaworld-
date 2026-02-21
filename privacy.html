@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>개인정보처리방침 - PlantiaWorld</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        .header {
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #4b5563;
+            font-size: 20px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .back-btn:hover { background: #f3f4f6; }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 32px auto;
+            padding: 0 16px;
+        }
+
+        .hero {
+            background: rgba(255,255,255,0.15);
+            border-radius: 24px;
+            padding: 36px 32px;
+            margin-bottom: 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .hero p {
+            font-size: 14px;
+            opacity: 0.85;
+            line-height: 1.6;
+        }
+
+        .effective-date {
+            display: inline-block;
+            background: rgba(255,255,255,0.25);
+            border-radius: 20px;
+            padding: 4px 16px;
+            font-size: 13px;
+            margin-top: 12px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.98);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid #f0fdf4;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #2e8b57, #32cd32);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .section-num {
+            font-size: 12px;
+            color: #9ca3af;
+            font-weight: 400;
+        }
+
+        p {
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.9;
+            margin-bottom: 12px;
+        }
+
+        p:last-child { margin-bottom: 0; }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin: 12px 0;
+        }
+
+        .info-table th {
+            background: #f0fdf4;
+            color: #2e8b57;
+            font-weight: 700;
+            padding: 10px 14px;
+            text-align: left;
+            border: 1px solid #d1fae5;
+        }
+
+        .info-table td {
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            vertical-align: top;
+            line-height: 1.7;
+        }
+
+        .info-table tr:nth-child(even) td {
+            background: #f9fafb;
+        }
+
+        .highlight-box {
+            background: #f0fdf4;
+            border-left: 4px solid #2e8b57;
+            border-radius: 0 12px 12px 0;
+            padding: 14px 18px;
+            margin: 12px 0;
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.8;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            border-radius: 0 12px 12px 0;
+            padding: 14px 18px;
+            margin: 12px 0;
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.8;
+        }
+
+        .rights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin: 12px 0;
+        }
+
+        .right-item {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+
+        .right-item i {
+            font-size: 22px;
+            color: #2e8b57;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .right-item span {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .contact-card {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 12px;
+        }
+
+        .contact-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 14px;
+            color: #374151;
+            border-bottom: 1px solid rgba(46,139,87,0.1);
+        }
+
+        .contact-row:last-child { border-bottom: none; }
+
+        .contact-row i {
+            color: #2e8b57;
+            width: 20px;
+            text-align: center;
+        }
+
+        .contact-row strong {
+            color: #1f2937;
+            min-width: 100px;
+        }
+
+        .toc {
+            background: rgba(255,255,255,0.98);
+            border-radius: 20px;
+            padding: 24px 32px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .toc-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toc-title i { color: #2e8b57; }
+
+        .toc-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 6px;
+        }
+
+        .toc-list li a {
+            text-decoration: none;
+            color: #2e8b57;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .toc-list li a:hover { background: #f0fdf4; }
+
+        .toc-list li a::before {
+            content: '›';
+            font-size: 16px;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-inner">
+            <button class="back-btn" onclick="history.back()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <span class="header-title">개인정보처리방침</span>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- 히어로 -->
+        <div class="hero">
+            <div class="hero-icon">🌿</div>
+            <h1>개인정보처리방침</h1>
+            <p>PlantiaWorld는 이용자의 개인정보를 소중히 여기며<br>관련 법령을 철저히 준수합니다.</p>
+            <span class="effective-date">시행일: 2025년 1월 1일</span>
+        </div>
+
+        <!-- 목차 -->
+        <div class="toc">
+            <div class="toc-title"><i class="fas fa-list"></i> 목차</div>
+            <ul class="toc-list">
+                <li><a href="#article1">제1조 수집하는 개인정보</a></li>
+                <li><a href="#article2">제2조 개인정보 이용목적</a></li>
+                <li><a href="#article3">제3조 보유 및 이용기간</a></li>
+                <li><a href="#article4">제4조 제3자 제공</a></li>
+                <li><a href="#article5">제5조 처리 위탁</a></li>
+                <li><a href="#article6">제6조 이용자 권리</a></li>
+                <li><a href="#article7">제7조 개인정보 보호조치</a></li>
+                <li><a href="#article8">제8조 쿠키 사용</a></li>
+                <li><a href="#article9">제9조 개인정보 보호책임자</a></li>
+                <li><a href="#article10">제10조 방침 변경 안내</a></li>
+            </ul>
+        </div>
+
+        <!-- 제1조 -->
+        <div class="card" id="article1">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-user-circle"></i></div>
+                <div>
+                    <div class="section-num">제1조</div>
+                    <div class="section-title">수집하는 개인정보 항목 및 방법</div>
+                </div>
+            </div>
+            <p>PlantiaWorld(이하 "회사")는 서비스 제공을 위해 아래와 같은 개인정보를 수집합니다.</p>
+            <table class="info-table">
+                <tr>
+                    <th>구분</th>
+                    <th>수집 항목</th>
+                    <th>수집 방법</th>
+                </tr>
+                <tr>
+                    <td><strong>회원가입</strong></td>
+                    <td>이메일 주소, 닉네임, 프로필 사진 (선택)</td>
+                    <td>Google 소셜 로그인</td>
+                </tr>
+                <tr>
+                    <td><strong>상품 등록</strong></td>
+                    <td>상품 사진, 제목, 설명, 위치 정보, 가격</td>
+                    <td>서비스 이용 중 직접 입력</td>
+                </tr>
+                <tr>
+                    <td><strong>채팅</strong></td>
+                    <td>채팅 메시지 내용, 전송 시각</td>
+                    <td>서비스 이용 중 생성</td>
+                </tr>
+                <tr>
+                    <td><strong>자동 수집</strong></td>
+                    <td>접속 IP, 브라우저 정보, 서비스 이용 기록</td>
+                    <td>시스템 자동 수집</td>
+                </tr>
+            </table>
+            <div class="highlight-box">
+                <i class="fas fa-info-circle" style="color:#2e8b57; margin-right:6px;"></i>
+                만 14세 미만 아동의 개인정보는 수집하지 않습니다. 회원가입 시 만 14세 이상임을 확인합니다.
+            </div>
+        </div>
+
+        <!-- 제2조 -->
+        <div class="card" id="article2">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-bullseye"></i></div>
+                <div>
+                    <div class="section-num">제2조</div>
+                    <div class="section-title">개인정보 이용목적</div>
+                </div>
+            </div>
+            <p>수집된 개인정보는 아래 목적으로만 이용되며, 목적 외 용도로 사용하지 않습니다.</p>
+            <div class="highlight-box">
+                ① 회원 식별 및 서비스 제공<br>
+                ② 식물 거래 서비스 연결 (판매자-구매자 매칭)<br>
+                ③ 채팅 서비스 제공<br>
+                ④ 고객 문의 및 분쟁 처리<br>
+                ⑤ 서비스 개선 및 신규 기능 개발<br>
+                ⑥ 부정 이용 방지 및 법적 의무 이행
+            </div>
+        </div>
+
+        <!-- 제3조 -->
+        <div class="card" id="article3">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-clock"></i></div>
+                <div>
+                    <div class="section-num">제3조</div>
+                    <div class="section-title">개인정보 보유 및 이용기간</div>
+                </div>
+            </div>
+            <p>원칙적으로 개인정보 수집 및 이용 목적이 달성된 후 해당 정보를 즉시 파기합니다. 단, 관계 법령에 따라 아래와 같이 보존합니다.</p>
+            <table class="info-table">
+                <tr>
+                    <th>보존 항목</th>
+                    <th>보존 기간</th>
+                    <th>근거 법령</th>
+                </tr>
+                <tr>
+                    <td>계약 또는 청약철회 기록</td>
+                    <td>5년</td>
+                    <td>전자상거래법</td>
+                </tr>
+                <tr>
+                    <td>대금결제 및 재화 공급 기록</td>
+                    <td>5년</td>
+                    <td>전자상거래법</td>
+                </tr>
+                <tr>
+                    <td>소비자 불만 및 분쟁 처리 기록</td>
+                    <td>3년</td>
+                    <td>전자상거래법</td>
+                </tr>
+                <tr>
+                    <td>접속 로그, IP 정보</td>
+                    <td>3개월</td>
+                    <td>통신비밀보호법</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 제4조 -->
+        <div class="card" id="article4">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-share-alt"></i></div>
+                <div>
+                    <div class="section-num">제4조</div>
+                    <div class="section-title">개인정보의 제3자 제공</div>
+                </div>
+            </div>
+            <p>회사는 이용자의 개인정보를 원칙적으로 제3자에게 제공하지 않습니다. 다만, 아래의 경우에는 예외로 합니다.</p>
+            <div class="highlight-box">
+                ① 이용자가 사전에 동의한 경우<br>
+                ② 법령의 규정에 의거하거나 수사 목적으로 법령에 정해진 절차와 방법에 따라 수사기관의 요구가 있는 경우
+            </div>
+            <div class="warning-box">
+                <i class="fas fa-exclamation-triangle" style="color:#f59e0b; margin-right:6px;"></i>
+                PlantiaWorld는 광고 목적으로 개인정보를 제3자에게 판매하거나 제공하지 않습니다.
+            </div>
+        </div>
+
+        <!-- 제5조 -->
+        <div class="card" id="article5">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-handshake"></i></div>
+                <div>
+                    <div class="section-num">제5조</div>
+                    <div class="section-title">개인정보 처리 위탁</div>
+                </div>
+            </div>
+            <p>회사는 원활한 서비스 제공을 위해 아래와 같이 개인정보 처리 업무를 외부 전문업체에 위탁하고 있습니다.</p>
+            <table class="info-table">
+                <tr>
+                    <th>수탁업체</th>
+                    <th>위탁 업무</th>
+                </tr>
+                <tr>
+                    <td>Google Firebase (Google LLC)</td>
+                    <td>데이터베이스 저장, 인증, 파일 스토리지 운영</td>
+                </tr>
+            </table>
+            <p>위탁 계약 시 개인정보가 안전하게 관리될 수 있도록 관련 사항을 규정하고 있습니다.</p>
+        </div>
+
+        <!-- 제6조 -->
+        <div class="card" id="article6">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-user-shield"></i></div>
+                <div>
+                    <div class="section-num">제6조</div>
+                    <div class="section-title">이용자의 권리와 행사 방법</div>
+                </div>
+            </div>
+            <p>이용자는 언제든지 아래의 권리를 행사할 수 있습니다.</p>
+            <div class="rights-grid">
+                <div class="right-item">
+                    <i class="fas fa-eye"></i>
+                    <span>개인정보 열람 요청</span>
+                </div>
+                <div class="right-item">
+                    <i class="fas fa-edit"></i>
+                    <span>개인정보 정정 요청</span>
+                </div>
+                <div class="right-item">
+                    <i class="fas fa-trash-alt"></i>
+                    <span>개인정보 삭제 요청</span>
+                </div>
+                <div class="right-item">
+                    <i class="fas fa-ban"></i>
+                    <span>처리 정지 요청</span>
+                </div>
+            </div>
+            <p style="margin-top:14px;">권리 행사는 서비스 내 설정 메뉴 또는 아래 개인정보 보호책임자에게 이메일로 요청하실 수 있으며, 지체 없이 조치하겠습니다.</p>
+        </div>
+
+        <!-- 제7조 -->
+        <div class="card" id="article7">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-lock"></i></div>
+                <div>
+                    <div class="section-num">제7조</div>
+                    <div class="section-title">개인정보 보호를 위한 기술적·관리적 조치</div>
+                </div>
+            </div>
+            <div class="highlight-box">
+                ① <strong>암호화</strong>: 비밀번호 및 민감 정보는 암호화하여 저장합니다.<br>
+                ② <strong>접근 제한</strong>: Firestore 보안 규칙을 통해 인가된 사용자만 데이터에 접근합니다.<br>
+                ③ <strong>보안 통신</strong>: HTTPS를 통해 데이터 전송 시 암호화합니다.<br>
+                ④ <strong>최소 권한</strong>: 개인정보에 접근하는 담당자를 최소화합니다.<br>
+                ⑤ <strong>정기 점검</strong>: 보안 취약점을 정기적으로 점검하고 개선합니다.
+            </div>
+        </div>
+
+        <!-- 제8조 -->
+        <div class="card" id="article8">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-cookie-bite"></i></div>
+                <div>
+                    <div class="section-num">제8조</div>
+                    <div class="section-title">쿠키(Cookie) 사용에 관한 사항</div>
+                </div>
+            </div>
+            <p>회사는 서비스 제공을 위해 쿠키 및 세션 스토리지를 사용합니다. 쿠키는 웹사이트 운영에 필요한 로그인 상태 유지 등의 목적으로만 사용됩니다.</p>
+            <p>이용자는 브라우저 설정을 통해 쿠키 저장을 거부할 수 있으나, 이 경우 일부 서비스 이용에 제한이 생길 수 있습니다.</p>
+        </div>
+
+        <!-- 제9조 -->
+        <div class="card" id="article9">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-user-tie"></i></div>
+                <div>
+                    <div class="section-num">제9조</div>
+                    <div class="section-title">개인정보 보호책임자</div>
+                </div>
+            </div>
+            <p>개인정보 처리에 관한 업무를 총괄하고 관련 불만 및 피해 구제를 담당하는 개인정보 보호책임자는 아래와 같습니다.</p>
+            <div class="contact-card">
+                <div class="contact-row">
+                    <i class="fas fa-building"></i>
+                    <strong>서비스명</strong> PlantiaWorld
+                </div>
+                <div class="contact-row">
+                    <i class="fas fa-user"></i>
+                    <strong>책임자</strong> 대표자
+                </div>
+                <div class="contact-row">
+                    <i class="fas fa-envelope"></i>
+                    <strong>이메일</strong> privacy@plantiaworld.com
+                </div>
+                <div class="contact-row">
+                    <i class="fas fa-clock"></i>
+                    <strong>처리 기간</strong> 접수 후 10일 이내
+                </div>
+            </div>
+            <p style="margin-top:14px; font-size:13px; color:#6b7280;">기타 개인정보 침해 신고는 개인정보보호위원회(privacy.go.kr), 한국인터넷진흥원(privacy.kisa.or.kr)에 문의하실 수 있습니다.</p>
+        </div>
+
+        <!-- 제10조 -->
+        <div class="card" id="article10">
+            <div class="section-header">
+                <div class="section-icon"><i class="fas fa-bell"></i></div>
+                <div>
+                    <div class="section-num">제10조</div>
+                    <div class="section-title">개인정보처리방침 변경에 관한 사항</div>
+                </div>
+            </div>
+            <p>이 개인정보처리방침은 관련 법령 및 서비스의 변경에 따라 내용이 변경될 수 있습니다.</p>
+            <div class="highlight-box">
+                방침 변경 시 시행일로부터 최소 <strong>7일 전</strong>에 서비스 공지사항을 통해 안내드립니다. 중요한 변경의 경우 <strong>30일 전</strong>에 사전 공지합니다.
+            </div>
+            <p>현재 개인정보처리방침은 <strong>2025년 1월 1일</strong>부터 시행됩니다.</p>
+        </div>
+
+    </div>
+
+</body>
+</html>

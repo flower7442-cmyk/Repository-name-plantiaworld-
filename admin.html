@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지 - PlantiaWorld</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #22263a;
+            --border: #2e3348;
+            --accent: #4f9cff;
+            --accent2: #2e8b57;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --text: #e2e8f0;
+            --text2: #94a3b8;
+            --text3: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* 사이드바 */
+        .sidebar {
+            width: 240px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-logo {
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-logo span {
+            font-size: 11px;
+            color: var(--text3);
+            display: block;
+            margin-top: 2px;
+        }
+
+        .admin-badge {
+            display: inline-block;
+            background: rgba(79,156,255,0.15);
+            color: var(--accent);
+            border: 1px solid rgba(79,156,255,0.3);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        .nav-section {
+            padding: 16px 12px 8px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text3);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            margin: 2px 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text2);
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .nav-item:hover { background: var(--surface2); color: var(--text); }
+        .nav-item.active { background: rgba(79,156,255,0.12); color: var(--accent); }
+        .nav-item.active i { color: var(--accent); }
+
+        .nav-item i { width: 18px; text-align: center; font-size: 14px; }
+
+        .nav-badge {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .admin-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent2), #32cd32);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .admin-name { font-weight: 600; color: var(--text); font-size: 13px; }
+        .admin-role { color: var(--text3); font-size: 11px; }
+
+        /* 메인 */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 28px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .topbar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .topbar-actions { display: flex; align-items: center; gap: 12px; }
+
+        .topbar-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .topbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .content { padding: 28px; flex: 1; }
+
+        /* 섹션 */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* 통계 카드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+
+        .stat-card.blue::before { background: var(--accent); }
+        .stat-card.green::before { background: var(--success); }
+        .stat-card.red::before { background: var(--danger); }
+        .stat-card.yellow::before { background: var(--warning); }
+
+        .stat-label { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+        .stat-value { font-size: 28px; font-weight: 700; color: var(--text); }
+        .stat-icon {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            font-size: 24px;
+            opacity: 0.15;
+        }
+        .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+        /* 테이블 */
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .table-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-header h3 i { color: var(--accent); }
+
+        .search-input {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            width: 200px;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .search-input:focus { outline: none; border-color: var(--accent); }
+        .search-input::placeholder { color: var(--text3); }
+
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            background: var(--surface2);
+            padding: 11px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text3);
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 13px 16px;
+            font-size: 13px;
+            color: var(--text2);
+            border-top: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-red { background: rgba(239,68,68,0.15); color: #f87171; }
+        .badge-yellow { background: rgba(245,158,11,0.15); color: #fbbf24; }
+        .badge-green { background: rgba(16,185,129,0.15); color: #34d399; }
+        .badge-blue { background: rgba(79,156,255,0.15); color: #93c5fd; }
+        .badge-gray { background: rgba(100,116,139,0.15); color: #94a3b8; }
+
+        .action-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text2);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Noto Sans KR', sans-serif;
+            margin-right: 4px;
+        }
+
+        .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+        .action-btn.success:hover { border-color: var(--success); color: var(--success); }
+
+        /* 로딩 */
+        .loading-row td {
+            text-align: center;
+            padding: 40px;
+            color: var(--text3);
+        }
+
+        /* 모달 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 28px;
+            width: 480px;
+            max-width: 90vw;
+        }
+
+        .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 20px; color: var(--text); }
+
+        .modal-field { margin-bottom: 16px; }
+        .modal-label { font-size: 12px; color: var(--text3); margin-bottom: 6px; display: block; }
+        .modal-value {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { opacity: 0.9; }
+        .btn-secondary { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* 접근 거부 화면 */
+        .access-denied {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            background: var(--bg);
+        }
+
+        .access-denied i { font-size: 60px; color: var(--danger); margin-bottom: 20px; opacity: 0.6; }
+        .access-denied h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+        .access-denied p { color: var(--text3); font-size: 14px; }
+
+        /* 필터 탭 */
+        .filter-tabs {
+            display: flex;
+            gap: 6px;
+        }
+
+        .filter-tab {
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            color: var(--text3);
+            background: none;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .filter-tab.active, .filter-tab:hover {
+            background: rgba(79,156,255,0.12);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* 토스트 */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--success);
+            border-radius: 12px;
+            padding: 14px 20px;
+            font-size: 14px;
+            color: var(--text);
+            z-index: 9999;
+            display: none;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text3);
+        }
+
+        .empty-state i { font-size: 36px; margin-bottom: 12px; display: block; opacity: 0.4; }
+        .empty-state p { font-size: 14px; }
+
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .sidebar { width: 60px; }
+            .sidebar .nav-item span, .sidebar-logo span,
+            .sidebar-logo h1 span:last-child, .nav-section,
+            .admin-name, .admin-role, .admin-badge { display: none; }
+            .main { margin-left: 60px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 접근 거부 화면 (비관리자) -->
+<div id="accessDenied" class="access-denied" style="display:none;">
+    <i class="fas fa-shield-alt"></i>
+    <h2>접근 권한이 없습니다</h2>
+    <p style="margin-top:8px;">관리자 계정으로 로그인해 주세요.</p>
+    <button onclick="window.location.href='index.html'" style="margin-top:24px; background:var(--accent); color:white; border:none; padding:10px 24px; border-radius:10px; font-size:14px; cursor:pointer; font-family:'Noto Sans KR',sans-serif;">
+        메인으로
+    </button>
+</div>
+
+<!-- 관리자 UI -->
+<div id="adminUI" style="display:none; width:100%; display:flex;">
+
+    <!-- 사이드바 -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h1>🌿 <span>PlantiaWorld</span></h1>
+            <span>Admin Dashboard</span>
+            <div class="admin-badge">ADMIN</div>
+        </div>
+
+        <div class="nav-section">메인</div>
+        <div class="nav-item active" onclick="showSection('dashboard', this)">
+            <i class="fas fa-chart-pie"></i><span>대시보드</span>
+        </div>
+
+        <div class="nav-section">관리</div>
+        <div class="nav-item" onclick="showSection('reports', this)">
+            <i class="fas fa-flag"></i><span>신고 관리</span>
+            <span class="nav-badge" id="reportBadge">0</span>
+        </div>
+        <div class="nav-item" onclick="showSection('products', this)">
+            <i class="fas fa-seedling"></i><span>상품 관리</span>
+        </div>
+        <div class="nav-item" onclick="showSection('users', this)">
+            <i class="fas fa-users"></i><span>사용자 관리</span>
+        </div>
+        <div class="nav-item" onclick="showSection('inquiries', this)">
+            <i class="fas fa-headset"></i><span>문의 관리</span>
+            <span class="nav-badge" id="inquiryBadge" style="display:none;">0</span>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="admin-info">
+                <div class="admin-avatar">👑</div>
+                <div>
+                    <div class="admin-name" id="adminName">관리자</div>
+                    <div class="admin-role">Super Admin</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 메인 -->
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-title" id="topbarTitle">대시보드</div>
+            <div class="topbar-actions">
+                <button class="topbar-btn" onclick="refreshAll()">
+                    <i class="fas fa-sync-alt"></i> 새로고침
+                </button>
+                <button class="topbar-btn" onclick="window.location.href='index.html'">
+                    <i class="fas fa-home"></i> 사이트
+                </button>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <!-- 대시보드 -->
+            <div class="section active" id="section-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-label">전체 상품</div>
+                        <div class="stat-value" id="stat-products">-</div>
+                        <div class="stat-sub">등록된 상품 수</div>
+                        <i class="fas fa-seedling stat-icon"></i>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-label">전체 회원</div>
+                        <div class="stat-value" id="stat-users">-</div>
+                        <div class="stat-sub">가입 회원 수</div>
+                        <i class="fas fa-users stat-icon"></i>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-label">미처리 신고</div>
+                        <div class="stat-value" id="stat-reports">-</div>
+                        <div class="stat-sub">처리 대기 중</div>
+                        <i class="fas fa-flag stat-icon"></i>
+                    </div>
+                    <div class="stat-card yellow">
+                        <div class="stat-label">미답변 문의</div>
+                        <div class="stat-value" id="stat-inquiries">-</div>
+                        <div class="stat-sub">답변 대기 중</div>
+                        <i class="fas fa-headset stat-icon"></i>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3><i class="fas fa-flag"></i> 최근 신고</h3>
+                        <button class="topbar-btn" onclick="showSection('reports', document.querySelector('[onclick*=reports]'))">전체 보기</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>신고 사유</th>
+                                <th>신고자</th>
+                                <th>대상 상품</th>
+                                <th>일시</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentReportsTable">
+                            <tr class="loading-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> 로딩 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 신고 관리 -->
+            <div class="section" id="section-reports">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3><i class="fas fa-flag"></i> 신고 목록</h3>
+                        <div style="display:flex; gap:10px;">
+                            <div class="filter-tabs">
+                                <button class="filter-tab active" onclick="filterReports('all', this)">전체</button>
+                                <button class="filter-tab" onclick="filterReports('pending', this)">미처리</button>
+                                <button class="filter-tab" onclick="filterReports('resolved', this)">처리완료</button>
+                            </div>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>신고 사유</th>
+                                <th>상세 내용</th>
+                                <th>신고자 ID</th>
+                                <th>대상 상품 ID</th>
+                                <th>일시</th>
+                                <th>상태</th>
+                                <th>처리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsTable">
+                            <tr class="loading-row"><td colspan="7"><i class="fas fa-spinner fa-spin"></i> 로딩 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 상품 관리 -->
+            <div class="section" id="section-products">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3><i class="fas fa-seedling"></i> 상품 목록</h3>
+                        <input type="text" class="search-input" placeholder="상품명 검색..." id="productSearch" oninput="filterProducts()">
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>상품명</th>
+                                <th>카테고리</th>
+                                <th>가격</th>
+                                <th>판매자</th>
+                                <th>상태</th>
+                                <th>조회수</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTable">
+                            <tr class="loading-row"><td colspan="7"><i class="fas fa-spinner fa-spin"></i> 로딩 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 사용자 관리 -->
+            <div class="section" id="section-users">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3><i class="fas fa-users"></i> 사용자 목록</h3>
+                        <input type="text" class="search-input" placeholder="이름/이메일 검색..." id="userSearch" oninput="filterUsers()">
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>이름</th>
+                                <th>이메일</th>
+                                <th>가입일</th>
+                                <th>상태</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable">
+                            <tr class="loading-row"><td colspan="5"><i class="fas fa-spinner fa-spin"></i> 로딩 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 문의 관리 -->
+            <div class="section" id="section-inquiries">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h3><i class="fas fa-headset"></i> 문의 목록</h3>
+                        <div class="filter-tabs">
+                            <button class="filter-tab active" onclick="filterInquiries('all', this)">전체</button>
+                            <button class="filter-tab" onclick="filterInquiries('pending', this)">미답변</button>
+                            <button class="filter-tab" onclick="filterInquiries('answered', this)">답변완료</button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>유형</th>
+                                <th>제목</th>
+                                <th>작성자</th>
+                                <th>이메일</th>
+                                <th>일시</th>
+                                <th>상태</th>
+                                <th>처리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inquiriesTable">
+                            <tr class="loading-row"><td colspan="7"><i class="fas fa-spinner fa-spin"></i> 로딩 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- 신고 상세 모달 -->
+<div class="modal-overlay" id="reportModal">
+    <div class="modal">
+        <h3><i class="fas fa-flag" style="color:var(--danger); margin-right:8px;"></i>신고 상세</h3>
+        <div class="modal-field">
+            <label class="modal-label">신고 사유</label>
+            <div class="modal-value" id="modal-reason">-</div>
+        </div>
+        <div class="modal-field">
+            <label class="modal-label">상세 내용</label>
+            <div class="modal-value" id="modal-details">-</div>
+        </div>
+        <div class="modal-field">
+            <label class="modal-label">대상 상품 ID</label>
+            <div class="modal-value" id="modal-productId">-</div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('reportModal')">닫기</button>
+            <button class="btn btn-danger" id="modal-delete-btn">상품 삭제</button>
+            <button class="btn btn-primary" id="modal-resolve-btn">처리완료</button>
+        </div>
+    </div>
+</div>
+
+<!-- 문의 답변 모달 -->
+<div class="modal-overlay" id="inquiryModal">
+    <div class="modal">
+        <h3><i class="fas fa-reply" style="color:var(--accent); margin-right:8px;"></i>문의 상세 / 답변</h3>
+        <div class="modal-field">
+            <label class="modal-label">문의 유형</label>
+            <div class="modal-value" id="inq-type">-</div>
+        </div>
+        <div class="modal-field">
+            <label class="modal-label">제목</label>
+            <div class="modal-value" id="inq-title">-</div>
+        </div>
+        <div class="modal-field">
+            <label class="modal-label">내용</label>
+            <div class="modal-value" id="inq-content" style="min-height:80px;">-</div>
+        </div>
+        <div class="modal-field">
+            <label class="modal-label">답변 메모 (내부용)</label>
+            <textarea id="inq-answer" rows="3" style="width:100%; background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:10px 14px; font-size:13px; resize:vertical; font-family:'Noto Sans KR',sans-serif;" placeholder="처리 내용을 입력하세요..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('inquiryModal')">닫기</button>
+            <button class="btn btn-primary" id="inq-resolve-btn">답변 완료 처리</button>
+        </div>
+    </div>
+</div>
+
+<!-- 토스트 -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import {
+        getFirestore, collection, getDocs, doc,
+        updateDoc, deleteDoc, query, orderBy, limit, where, getDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAW_z3hoI9SZ1-hoxKVYBKs7rbdo8n6wdc",
+        authDomain: "plantiaworld.firebaseapp.com",
+        projectId: "plantiaworld",
+        storageBucket: "plantiaworld.firebasestorage.app",
+        messagingSenderId: "18112813073",
+        appId: "1:18112813073:web:7247046c038a3831db79b0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ⚠️ 관리자 UID 목록 - 본인 UID로 교체하세요
+    const ADMIN_UIDS = [
+        'LIuwCkomQmf0iHf7QoBXs57OecI2'
+    ];
+
+    let allReports = [], allProducts = [], allUsers = [], allInquiries = [];
+    let currentReportFilter = 'all';
+    let currentInquiryFilter = 'all';
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.borderLeftColor = type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--warning)';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 2500);
+    }
+
+    window.showToast = showToast;
+
+    function formatDate(ts) {
+        if (!ts) return '-';
+        const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
+        const now = new Date();
+        const diff = Math.floor((now - d) / 1000);
+        if (diff < 60) return '방금 전';
+        if (diff < 3600) return `${Math.floor(diff/60)}분 전`;
+        if (diff < 86400) return `${Math.floor(diff/3600)}시간 전`;
+        return `${Math.floor(diff/86400)}일 전`;
+    }
+
+    // ===== 인증 확인 =====
+    onAuthStateChanged(auth, async (user) => {
+        if (user && ADMIN_UIDS.includes(user.uid)) {
+            document.getElementById('accessDenied').style.display = 'none';
+            document.getElementById('adminUI').style.display = 'flex';
+            document.getElementById('adminName').textContent = user.displayName || user.email?.split('@')[0] || '관리자';
+            await loadAll();
+        } else {
+            document.getElementById('adminUI').style.display = 'none';
+            document.getElementById('accessDenied').style.display = 'flex';
+        }
+    });
+
+    // ===== 전체 로드 =====
+    async function loadAll() {
+        await Promise.all([loadReports(), loadProducts(), loadUsers(), loadInquiries()]);
+        updateStats();
+    }
+    window.refreshAll = loadAll;
+
+    // ===== 통계 업데이트 =====
+    function updateStats() {
+        document.getElementById('stat-products').textContent = allProducts.length;
+        document.getElementById('stat-users').textContent = allUsers.length;
+        const pendingReports = allReports.filter(r => r.status !== 'resolved').length;
+        const pendingInquiries = allInquiries.filter(i => i.status !== 'answered').length;
+        document.getElementById('stat-reports').textContent = pendingReports;
+        document.getElementById('stat-inquiries').textContent = pendingInquiries;
+        document.getElementById('reportBadge').textContent = pendingReports;
+        document.getElementById('reportBadge').style.display = pendingReports > 0 ? '' : 'none';
+        if (pendingInquiries > 0) {
+            document.getElementById('inquiryBadge').textContent = pendingInquiries;
+            document.getElementById('inquiryBadge').style.display = '';
+        }
+    }
+
+    // ===== 신고 로드 =====
+    async function loadReports() {
+        try {
+            const snap = await getDocs(query(collection(db, 'reports'), orderBy('createdAt', 'desc')));
+            allReports = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderReports(allReports);
+            renderRecentReports(allReports.slice(0, 5));
+        } catch (e) {
+            document.getElementById('reportsTable').innerHTML = `<tr class="loading-row"><td colspan="7">⚠️ 신고 데이터를 불러올 수 없습니다</td></tr>`;
+        }
+    }
+
+    function renderRecentReports(reports) {
+        const tbody = document.getElementById('recentReportsTable');
+        if (!reports.length) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text3);">신고가 없습니다</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = reports.map(r => `
+            <tr>
+                <td><span class="badge badge-red"><i class="fas fa-flag"></i> ${r.reason || '-'}</span></td>
+                <td style="color:var(--text3); font-size:12px;">${(r.reporterId || '-').substring(0, 12)}...</td>
+                <td style="font-size:12px; color:var(--text3);">${(r.productId || '-').substring(0, 12)}...</td>
+                <td style="font-size:12px;">${formatDate(r.createdAt)}</td>
+                <td>${r.status === 'resolved'
+                    ? '<span class="badge badge-green">처리완료</span>'
+                    : '<span class="badge badge-red">미처리</span>'}</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderReports(reports) {
+        const tbody = document.getElementById('reportsTable');
+        const filtered = currentReportFilter === 'all' ? reports
+            : currentReportFilter === 'pending' ? reports.filter(r => r.status !== 'resolved')
+            : reports.filter(r => r.status === 'resolved');
+
+        if (!filtered.length) {
+            tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-flag"></i><p>신고 내역이 없습니다</p></div></td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(r => `
+            <tr>
+                <td><span class="badge badge-red">${r.reason || '-'}</span></td>
+                <td style="max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text3);">${r.details || '-'}</td>
+                <td style="font-size:11px; color:var(--text3);">${(r.reporterId || '-').substring(0, 10)}...</td>
+                <td style="font-size:11px; color:var(--text3);">${(r.productId || '-').substring(0, 10)}...</td>
+                <td style="font-size:12px;">${formatDate(r.createdAt)}</td>
+                <td>${r.status === 'resolved'
+                    ? '<span class="badge badge-green">처리완료</span>'
+                    : '<span class="badge badge-yellow">미처리</span>'}</td>
+                <td>
+                    <button class="action-btn" onclick="openReportModal('${r.id}')">상세</button>
+                    ${r.status !== 'resolved' ? `<button class="action-btn success" onclick="resolveReport('${r.id}')">완료</button>` : ''}
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    window.filterReports = function(type, el) {
+        currentReportFilter = type;
+        document.querySelectorAll('#section-reports .filter-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        renderReports(allReports);
+    };
+
+    window.openReportModal = function(id) {
+        const r = allReports.find(r => r.id === id);
+        if (!r) return;
+        document.getElementById('modal-reason').textContent = r.reason || '-';
+        document.getElementById('modal-details').textContent = r.details || '-';
+        document.getElementById('modal-productId').textContent = r.productId || '-';
+        document.getElementById('modal-resolve-btn').onclick = () => resolveReport(id);
+        document.getElementById('modal-delete-btn').onclick = () => deleteReportedProduct(r.productId, id);
+        document.getElementById('reportModal').classList.add('open');
+    };
+
+    window.resolveReport = async function(id) {
+        try {
+            await updateDoc(doc(db, 'reports', id), { status: 'resolved', resolvedAt: serverTimestamp() });
+            showToast('신고가 처리 완료되었습니다');
+            closeModal('reportModal');
+            await loadReports();
+            updateStats();
+        } catch (e) {
+            showToast('처리 실패', 'error');
+        }
+    };
+
+    window.deleteReportedProduct = async function(productId, reportId) {
+        if (!productId) { showToast('상품 ID가 없습니다', 'error'); return; }
+        if (!confirm('해당 상품을 삭제하고 신고를 처리 완료로 변경할까요?')) return;
+        try {
+            await deleteDoc(doc(db, 'products', productId));
+            await updateDoc(doc(db, 'reports', reportId), { status: 'resolved', resolvedAt: serverTimestamp() });
+            showToast('상품이 삭제되었습니다');
+            closeModal('reportModal');
+            await Promise.all([loadReports(), loadProducts()]);
+            updateStats();
+        } catch (e) {
+            showToast('삭제 실패', 'error');
+        }
+    };
+
+    // ===== 상품 로드 =====
+    async function loadProducts() {
+        try {
+            const snap = await getDocs(query(collection(db, 'products'), orderBy('createdAt', 'desc')));
+            allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderProducts(allProducts);
+        } catch (e) {
+            document.getElementById('productsTable').innerHTML = `<tr class="loading-row"><td colspan="7">⚠️ 상품 데이터를 불러올 수 없습니다</td></tr>`;
+        }
+    }
+
+    function renderProducts(products) {
+        const tbody = document.getElementById('productsTable');
+        if (!products.length) {
+            tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-seedling"></i><p>상품이 없습니다</p></div></td></tr>`;
+            return;
+        }
+        tbody.innerHTML = products.map(p => {
+            const statusBadge = p.status === '판매중' ? 'badge-blue' : p.status === '예약중' ? 'badge-yellow' : 'badge-gray';
+            return `
+            <tr>
+                <td style="font-weight:600; color:var(--text);">${p.title || '-'}</td>
+                <td><span class="badge badge-green">${p.category || '-'}</span></td>
+                <td style="color:var(--accent);">${p.price ? p.price.toLocaleString() + '원' : '무료'}</td>
+                <td style="font-size:12px; color:var(--text3);">${(p.sellerName || p.sellerId || '-').substring(0, 12)}</td>
+                <td><span class="badge ${statusBadge}">${p.status || '-'}</span></td>
+                <td style="color:var(--text3);">${p.views || 0}</td>
+                <td>
+                    <button class="action-btn" onclick="window.open('product-detail.html?id=${p.id}', '_blank')">보기</button>
+                    <button class="action-btn danger" onclick="deleteProduct('${p.id}')">삭제</button>
+                </td>
+            </tr>
+            `;
+        }).join('');
+    }
+
+    window.filterProducts = function() {
+        const q = document.getElementById('productSearch').value.toLowerCase();
+        renderProducts(allProducts.filter(p => (p.title || '').toLowerCase().includes(q)));
+    };
+
+    window.deleteProduct = async function(id) {
+        if (!confirm('이 상품을 삭제하시겠습니까?')) return;
+        try {
+            await deleteDoc(doc(db, 'products', id));
+            showToast('상품이 삭제되었습니다');
+            await loadProducts();
+            updateStats();
+        } catch (e) {
+            showToast('삭제 실패', 'error');
+        }
+    };
+
+    // ===== 사용자 로드 =====
+    async function loadUsers() {
+        try {
+            const snap = await getDocs(collection(db, 'users'));
+            allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderUsers(allUsers);
+        } catch (e) {
+            document.getElementById('usersTable').innerHTML = `<tr class="loading-row"><td colspan="5">⚠️ 사용자 데이터를 불러올 수 없습니다</td></tr>`;
+        }
+    }
+
+    function renderUsers(users) {
+        const tbody = document.getElementById('usersTable');
+        if (!users.length) {
+            tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-users"></i><p>사용자가 없습니다</p></div></td></tr>`;
+            return;
+        }
+        tbody.innerHTML = users.map(u => `
+            <tr>
+                <td style="font-weight:600; color:var(--text);">${u.displayName || u.name || '-'}</td>
+                <td style="color:var(--text3); font-size:12px;">${u.email || '-'}</td>
+                <td style="font-size:12px;">${formatDate(u.createdAt)}</td>
+                <td><span class="badge ${u.banned ? 'badge-red' : 'badge-green'}">${u.banned ? '정지' : '정상'}</span></td>
+                <td>
+                    <button class="action-btn ${u.banned ? 'success' : 'danger'}" onclick="toggleBanUser('${u.id}', ${!!u.banned})">
+                        ${u.banned ? '정지 해제' : '이용 정지'}
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    window.filterUsers = function() {
+        const q = document.getElementById('userSearch').value.toLowerCase();
+        renderUsers(allUsers.filter(u =>
+            (u.displayName || '').toLowerCase().includes(q) ||
+            (u.email || '').toLowerCase().includes(q)
+        ));
+    };
+
+    window.toggleBanUser = async function(id, isBanned) {
+        const msg = isBanned ? '이 사용자의 정지를 해제하시겠습니까?' : '이 사용자를 이용 정지하시겠습니까?';
+        if (!confirm(msg)) return;
+        try {
+            await updateDoc(doc(db, 'users', id), { banned: !isBanned });
+            showToast(isBanned ? '정지가 해제되었습니다' : '이용 정지되었습니다');
+            await loadUsers();
+        } catch (e) {
+            showToast('처리 실패', 'error');
+        }
+    };
+
+    // ===== 문의 로드 =====
+    async function loadInquiries() {
+        try {
+            const snap = await getDocs(query(collection(db, 'inquiries'), orderBy('createdAt', 'desc')));
+            allInquiries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            renderInquiries(allInquiries);
+        } catch (e) {
+            document.getElementById('inquiriesTable').innerHTML = `<tr class="loading-row"><td colspan="7">문의 데이터가 없거나 불러올 수 없습니다</td></tr>`;
+        }
+    }
+
+    function renderInquiries(inquiries) {
+        const tbody = document.getElementById('inquiriesTable');
+        const filtered = currentInquiryFilter === 'all' ? inquiries
+            : currentInquiryFilter === 'pending' ? inquiries.filter(i => i.status !== 'answered')
+            : inquiries.filter(i => i.status === 'answered');
+
+        if (!filtered.length) {
+            tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-headset"></i><p>문의가 없습니다</p></div></td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(i => `
+            <tr>
+                <td><span class="badge badge-blue">${i.type || '일반'}</span></td>
+                <td style="font-weight:600; color:var(--text);">${i.title || '-'}</td>
+                <td>${i.name || '-'}</td>
+                <td style="font-size:12px; color:var(--text3);">${i.email || '-'}</td>
+                <td style="font-size:12px;">${formatDate(i.createdAt)}</td>
+                <td>${i.status === 'answered'
+                    ? '<span class="badge badge-green">답변완료</span>'
+                    : '<span class="badge badge-yellow">미답변</span>'}</td>
+                <td>
+                    <button class="action-btn" onclick="openInquiryModal('${i.id}')">상세/답변</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    window.filterInquiries = function(type, el) {
+        currentInquiryFilter = type;
+        document.querySelectorAll('#section-inquiries .filter-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        renderInquiries(allInquiries);
+    };
+
+    window.openInquiryModal = function(id) {
+        const i = allInquiries.find(i => i.id === id);
+        if (!i) return;
+        document.getElementById('inq-type').textContent = i.type || '-';
+        document.getElementById('inq-title').textContent = i.title || '-';
+        document.getElementById('inq-content').textContent = i.content || '-';
+        document.getElementById('inq-answer').value = i.adminNote || '';
+        document.getElementById('inq-resolve-btn').onclick = async () => {
+            try {
+                await updateDoc(doc(db, 'inquiries', id), {
+                    status: 'answered',
+                    adminNote: document.getElementById('inq-answer').value,
+                    answeredAt: serverTimestamp()
+                });
+                showToast('답변 완료 처리되었습니다');
+                closeModal('inquiryModal');
+                await loadInquiries();
+                updateStats();
+            } catch(e) { showToast('처리 실패', 'error'); }
+        };
+        document.getElementById('inquiryModal').classList.add('open');
+    };
+
+    // ===== 공통 =====
+    window.showSection = function(name, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('section-' + name).classList.add('active');
+        if (el) el.classList.add('active');
+        const titles = { dashboard:'대시보드', reports:'신고 관리', products:'상품 관리', users:'사용자 관리', inquiries:'문의 관리' };
+        document.getElementById('topbarTitle').textContent = titles[name] || '';
+    };
+
+    window.closeModal = function(id) {
+        document.getElementById(id).classList.remove('open');
+    };
+</script>
+
+</body>
+</html>
