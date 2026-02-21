@@ -79,49 +79,36 @@ service cloud.firestore {
     }
 
 
-    // ========== chats 컬렉션 ==========
-    match /chats/{chatId} {
+   // ========== chats 컬렉션 ==========
+match /chats/{chatId} {
 
-      // 읽기: 채팅 참여자(buyerId 또는 sellerId)만 가능
-      allow read: if isLoggedIn()
-        && (
-          resource.data.buyerId == request.auth.uid
-          || resource.data.sellerId == request.auth.uid
-        );
+  allow read: if isLoggedIn()
+    && (
+      resource.data.buyerId == request.auth.uid
+      || resource.data.sellerId == request.auth.uid
+    );
 
-      // 생성: 로그인한 사용자만, 본인이 buyerId여야 함
-      allow create: if isLoggedIn()
-        && request.resource.data.buyerId == request.auth.uid;
+  allow create: if isLoggedIn()
+    && request.resource.data.buyerId == request.auth.uid;
 
-      // 수정: 채팅 참여자만 (메시지 추가, 읽음 처리 등)
-      allow update: if isLoggedIn()
-        && (
-          resource.data.buyerId == request.auth.uid
-          || resource.data.sellerId == request.auth.uid
-        );
+  allow update: if isLoggedIn()
+    && (
+      resource.data.buyerId == request.auth.uid
+      || resource.data.sellerId == request.auth.uid
+    );
 
-      // 삭제: 불가 (채팅 기록 보존)
-      allow delete: if false;
-    }
+  allow delete: if false;
 
-
-    // ========== reports 컬렉션 ==========
-    match /reports/{reportId} {
-
-      // 읽기: 관리자만
-      allow read: if isAdmin();
-
-      // 신고 생성: 로그인한 사용자만, 본인 uid 포함
-      allow create: if isLoggedIn()
-        && request.resource.data.reporterId == request.auth.uid;
-
-      // 수정(처리완료 등): 관리자만
-      allow update: if isAdmin();
-
-      // 삭제: 불가
-      allow delete: if false;
-    }
-
+  // ⭐ 메시지 서브컬렉션 추가
+  match /messages/{messageId} {
+    allow read, create: if isLoggedIn()
+      && (
+        get(/databases/$(database)/documents/chats/$(chatId)).data.buyerId == request.auth.uid
+        || get(/databases/$(database)/documents/chats/$(chatId)).data.sellerId == request.auth.uid
+      );
+    allow update, delete: if false;
+  }
+}
 
     // ========== inquiries 컬렉션 ==========
     match /inquiries/{inquiryId} {
